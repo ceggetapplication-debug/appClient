@@ -6,7 +6,7 @@ import { LocationObject } from 'expo-location';
 import MapView, { Marker, Region, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 import { uploadToR2 } from '../calculation-logic/imagesLogic';
 import { useAgePhoneValidation } from '../calculation-logic/verifAgeNum';
 
@@ -53,7 +53,7 @@ const RegistrationForm = () => {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('permissionDeniedTitle'), t('permissionDeniedMessage'));
+      Alert.alert(t('consoleLogRef'), t('gpsScreen.permissionDenied'));
       return;
     }
 
@@ -63,19 +63,8 @@ const RegistrationForm = () => {
       quality: 0.5,
     });
 
-    if (!result.canceled && result.assets.length > 0) {
-      const selectedAsset = result.assets[0];
-      if (selectedAsset.fileSize && selectedAsset.fileSize > 1000 * 1024) {
-        Alert.alert(
-          t('errorTitle'),
-          "Cette image est trop lourde (plus de 1 Mo). Merci d'en choisir une autre ou de la réduire."
-        );
-        return;
-      }
-
-      setImageUri(selectedAsset.uri);
-    } else if (result.canceled) {
-      Alert.alert(t('importCancelledTitle'), t('importCancelledMessage'));
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImageUri(result.assets[0].uri);
     }
   };
 
@@ -84,8 +73,8 @@ const RegistrationForm = () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
-        t('permissionDeniedTitle'),
-        t('locationPermissionDeniedMessage')
+        t('consoleLogRef'),
+        t('locationPermissionDenied')
       );
       setIsLoading(false);
       return;
@@ -144,17 +133,17 @@ const RegistrationForm = () => {
       if (!birthDate || birthDate.length !== 10 || birthDateError) {
         missingFields.push(t('dobLabel') + (birthDateError ? ` (${birthDateError})` : ''));
       }
-      if (!phone || phone.replace(/\D/g, '').length !== 10 || phoneError) missingFields.push(t('labelPhone') + (phoneError ? ` (${phoneError})` : ''));
-      if (!email) missingFields.push(t('labelEmail'));
-      if (!password) missingFields.push(t('labelPassword'));
-      if (password.length < 8) missingFields.push(t('labelPassword') + ` (${t('passwordNote')})`);
-      if (!address) missingFields.push(t('labelAddress'));
+      if (!phone || phone.replace(/\D/g, '').length !== 10 || phoneError) missingFields.push(t('phoneLabel') + (phoneError ? ` (${phoneError})` : ''));
+      if (!email) missingFields.push(t('emailLabel'));
+      if (!password) missingFields.push(t('passwordLabel'));
+      if (password.length < 8) missingFields.push(t('passwordLabel') + ` (${t('passwordNote')})`);
+      if (!address) missingFields.push(t('commandList.address'));
       if (domicileType === 'Appartement') {
         if (!buildingName) missingFields.push(t('buildingNameLabel'));
         if (!floor) missingFields.push(t('floorLabel'));
       }
       if (!imageUri) missingFields.push(t('frontDoorPic'));
-      let errorMessage = t('missingFieldsPrompt') + '\n\n' + missingFields.join('\n');
+      let errorMessage = t('profileScreen.passwordFieldsRequired') + '\n\n' + missingFields.join('\n');
       if (localisation_gps === null) missingFields.push(t('tab.gps') + ` (${t('selectOnMap')})`);
       Alert.alert(t('formIncompleteTitle'), errorMessage);
       return;
@@ -213,9 +202,9 @@ const RegistrationForm = () => {
 
     } catch (error) {
       console.error("Registration Error:", error);
-      const errorMessage = t('authErrorDefault');
+      const errorMessage = t('genericError');
       setAuthError(errorMessage);
-      Alert.alert(t('errorTitle'), errorMessage);
+      Alert.alert(t('general.error'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +214,7 @@ const RegistrationForm = () => {
     setIsLoading(true);
     try {
       if (selectedPinLocation === null) {
-        Alert.alert(t('errorTitle'), t('noLocationSelectedForGeocoding') || 'Aucun point sélectionné sur la carte.');
+        Alert.alert(t('general.attention'), t('noLocationSelected') || 'Aucun point sélectionné sur la carte.');
         setIsLoading(false);
         setShowMapModal(false);
         return;
@@ -243,16 +232,13 @@ const RegistrationForm = () => {
         setSuggestedAddressFromMap(fullAddressString);
         Alert.alert(t('general.success'), t('selectedAddressIs').replace('{0}', String(fullAddressString)));
       } else {
-        setSuggestedAddressFromMap(t('addressNotFound'));
-        Alert.alert(t('errorTitle'), t('addressNotFound'));
+        const gpsFallback = `${selectedPinLocation.latitude.toFixed(5)}, ${selectedPinLocation.longitude.toFixed(5)}`;
+        setSuggestedAddressFromMap(gpsFallback);
       }
     } catch (error) {
       console.error("Geocoding Error confirming location:", error);
-      Alert.alert(t('errorTitle'), t('geocodingError'));
-      setSuggestedAddressFromMap(t('geocodingError'));
-    } finally {
-      setIsLoading(false);
-      setShowMapModal(false);
+      const gpsFallback = `${selectedPinLocation.latitude.toFixed(5)}, ${selectedPinLocation.longitude.toFixed(5)}`;
+      setSuggestedAddressFromMap(gpsFallback);
     }
   };
 
@@ -553,7 +539,7 @@ const RegistrationForm = () => {
         </View>
         {authError ? <Text style={styles.error}>{authError}</Text> : null}
 
-        <Text style={styles.note}>{t('passwordNote')}</Text>
+        <Text style={styles.note}>{t('profileScreen.weakPasswordHint')}</Text>
 
         <TouchableOpacity
           onPress={handleSubmit}

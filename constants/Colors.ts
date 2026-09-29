@@ -1,39 +1,58 @@
 import { StyleSheet } from 'react-native';
 
 export const PALETTE = {
-  deepBlue: '#001524',
-  teal: '#15616d',
-  linen: '#ffecd1',
-  orange: '#ff7d00',
   russet: '#78290f',
-  grey: '#f9f9f9',
-  white: '#ffffff',
-  black: '#000000',
-  roj: 'rgb(212, 3, 3)',
   gri: '#313630',
+  orangeRed: '#ff7d00',
+  platinum: '#e8e9eb',
+  timberwolf: '#e0dfd5',
+  onyx: '#001524',
+  sandy: '#ffecd1',
+  punk: '#FF9E80',
+  white: '#f9f9f9',
+  green: '#15616d',
+  grey: '#313630',
+  nwar: '#000000',
+  acvhan: '#fff',
+  rouge: 'red',
+  bloug: '#14213d',
 };
 
-export const GLOBAL_STYLES = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: PALETTE.grey,
+export const Colors = {
+  light: {
+    text: PALETTE.onyx,
+    background: PALETTE.white,
+    tint: PALETTE.orangeRed,
+    icon: PALETTE.onyx,
+    tabIconDefault: PALETTE.timberwolf,
+    tabIconSelected: PALETTE.orangeRed,
+    surface: PALETTE.platinum,
+    accent: PALETTE.sandy,
+    green: PALETTE.green,
+    greyDes: PALETTE.grey,
+    textNormal: PALETTE.nwar,
+    errorText: PALETTE.punk,
+    noir: PALETTE.nwar,
+    blond: PALETTE.acvhan,
+    blou: PALETTE.bloug,
+    azuvagh: PALETTE.rouge
   },
-  textBody: {
-    color: PALETTE.black,
-    fontSize: 14,
+  dark: {
+    text: PALETTE.platinum,
+    background: PALETTE.onyx,
+    tint: PALETTE.orangeRed,
+    icon: PALETTE.onyx,
+    tabIconDefault: '#687076',
+    tabIconSelected: PALETTE.orangeRed,
+    surface: '#3d4244',
+    accent: PALETTE.sandy,
+    green: PALETTE.green,
+    greyDes: PALETTE.grey,
+    textNormal: PALETTE.acvhan,
+    errorText: PALETTE.rouge,
+    noir: PALETTE.nwar,
+    blond: PALETTE.acvhan,
+    blou: PALETTE.bloug,
+    azuvagh: PALETTE.rouge
   },
-  textLabel: {
-    color: PALETTE.deepBlue,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  textTitle: {
-    color: PALETTE.russet,
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  amount: {
-    color: PALETTE.orange,
-    fontWeight: '900',
-  }
-});
+};
