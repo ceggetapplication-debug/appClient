@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Ceggetherl",
+    "slug": "Cegget",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logi.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logi.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.cegget.ceggettah"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/logi.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/logi.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "7d2cc69c-99eb-4c47-8373-3a3f9b81a6fc"
+      }
+    }
+  }
+}
