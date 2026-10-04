@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
 import * as Location from 'expo-location';
 import { account, databases, config, ID } from '../calculation-logic/appwriteConfig';
 import { LocationObject } from 'expo-location';
@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAppTranslation } from '@/translations/data/translationCentralization';
 import { uploadToR2 } from '../calculation-logic/imagesLogic';
+import { Colors } from '@/constants/Colors';
 import { useAgePhoneValidation } from '../calculation-logic/verifAgeNum';
 
 interface LocationCoordinates {
@@ -19,6 +20,10 @@ interface LocationCoordinates {
 
 const RegistrationForm = () => {
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
   const [fullName, setFullName] = useState('');
   const [sexe, setSexe] = useState('');
   const [username, setUserName] = useState('');
@@ -316,7 +321,7 @@ const RegistrationForm = () => {
             <Ionicons
               name="business"
               size={24}
-              color={domicileType === 'Appartement' ? '#FFFFFF' : '#15616d'}
+              color={domicileType === 'Appartement' ? colors.blond : colors.green}
               style={styles.iconSpacing}
             />
             <Text style={[styles.homeButtonText, domicileType === 'Appartement' && styles.homeButtonTextSelected]}>
@@ -334,7 +339,7 @@ const RegistrationForm = () => {
             <Ionicons
               name="home"
               size={24}
-              color={domicileType === 'Maison' ? '#FFFFFF' : '#15616d'}
+              color={domicileType === 'Maison' ? colors.blond : colors.green}
               style={styles.iconSpacing}
             />
             <Text style={[styles.homeButtonText, domicileType === 'Maison' && styles.homeButtonTextSelected]}>
@@ -351,7 +356,7 @@ const RegistrationForm = () => {
             <Ionicons
               name="briefcase"
               size={24}
-              color={domicileType === 'Bureau' ? '#FFFFFF' : '#15616d'}
+              color={domicileType === 'Bureau' ? colors.blond : colors.green}
               style={styles.iconSpacing}
             />
             <Text style={[styles.homeButtonText, domicileType === 'Bureau' && styles.homeButtonTextSelected]}>
@@ -414,7 +419,7 @@ const RegistrationForm = () => {
         <Text style={styles.label}>{t('frontDoorPic')}</Text>
         <TouchableOpacity onPress={pickImage} style={styles.imageButton} disabled={isLoading}>
           <Text style={styles.imageButtonText}>
-            {isLoading && imageUri ? <ActivityIndicator color="#ffecd1" size="small" /> : t('importPhotoBtn')}
+            {isLoading && imageUri ? <ActivityIndicator color={colors.accent} size="small" /> : t('importPhotoBtn')}
           </Text>
         </TouchableOpacity>
         {imageUri && <Image source={{ uri: imageUri }} style={styles.imagePreview} />}
@@ -491,7 +496,7 @@ const RegistrationForm = () => {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.blond} />
               ) : (
                 <Text style={styles.confirmLocationButtonText}>{t('general.confirm')}</Text>
               )}
@@ -534,7 +539,7 @@ const RegistrationForm = () => {
             editable={!isLoading}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle} disabled={isLoading}>
-            <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#001524" />
+            <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color={colors.icon} />
           </TouchableOpacity>
         </View>
         {authError ? <Text style={styles.error}>{authError}</Text> : null}
@@ -547,7 +552,7 @@ const RegistrationForm = () => {
           disabled={!isFormValidForSubmission() || isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator color="#ffecd1" />
+            <ActivityIndicator color={colors.blou} />
           ) : (
             <Text style={styles.submitButtonText}>{t('submitButton')} </Text>
           )}
@@ -557,234 +562,239 @@ const RegistrationForm = () => {
   )
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 60,
-    backgroundColor: '#f9f9f9',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    marginTop: 20,
-    alignSelf: 'auto',
-    color: '#001524',
-    textDecorationLine: 'underline',
-    textDecorationColor: '#15616d',
-  },
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    container: {
+      padding: 20,
+      paddingBottom: 60,
+      backgroundColor: colors.background,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      marginTop: 20,
+      alignSelf: 'auto',
+      color: colors.text,
+      textDecorationLine: 'underline',
+      textDecorationColor: colors.green,
+    },
 
-  sidetitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    marginTop: 15,
-    alignSelf: 'auto',
-    textDecorationLine: 'underline'
-  },
-  mapButton: {
-    backgroundColor: '#ff7d00',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-    alignSelf: 'center',
-    alignItems: 'center',
-    width: '50%',
-  },
-  mapButtonText: {
-    color: '#001524',
-    fontWeight: 'bold',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    padding: 20,
-  },
-  map: {
-    width: '100%',
-    height: '60%',
-    borderRadius: 5,
-    borderColor: '#ff7d00',
-    borderWidth: 2,
-    marginBottom: 20,
-  },
-  confirmLocationButton: {
-    backgroundColor: '#001524',
-    padding: 15,
-    borderRadius: 5,
-    marginTop: 10,
-    width: '80%',
-    alignItems: 'center',
-  },
-  confirmLocationButtonText: {
-    color: '#ffecd1',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  cancelMapButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-    width: '80%',
-    alignItems: 'center',
-  },
-  cancelMapButtonText: {
-    color: '#001524',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  gpsCoordinatesText: {
-    fontSize: 14,
-    color: '#001524',
-    fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: 5,
-    alignSelf: 'center',
-  },
-  gpsSuggestedAddressText: {
-    fontSize: 14,
-    color: '#001524',
-    fontStyle: 'italic',
-    marginTop: 10,
-  },
-  sexeSelectionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
-  },
-  sexeButton: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: '#ff7d00',
-    borderRadius: 2,
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-  },
-  sexeButtonSelected: {
-    backgroundColor: '#ff7d00',
-    borderColor: '#001524',
-  },
-  sexeButtonText: {
-    color: '#001524',
-    fontWeight: '600',
-  },
-  sexeButtonTextSelected: {
-    color: '#fff',
-  },
-  homeButton: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: '#ff7d00',
-    borderRadius: 2,
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    width: '62%',
-    alignSelf: 'center',
-    marginTop: 5,
-  },
-  homeButtonSelected: {
-    backgroundColor: '#ff7d00',
-    borderColor: '#001524',
-  },
-  homeButtonText: {
-    color: '#001524',
-    fontWeight: '600',
-  },
-  homeButtonTextSelected: {
-    color: '#fff',
-  },
+    sidetitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      marginTop: 15,
+      alignSelf: 'auto',
+      textDecorationLine: 'underline'
+    },
+    mapButton: {
+      backgroundColor: colors.tint,
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 10,
+      alignSelf: 'center',
+      alignItems: 'center',
+      width: 'fit-content',
+    },
+    mapButtonText: {
+      color: colors.text,
+      fontWeight: 'bold',
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: 20,
+    },
+    map: {
+      width: '100%',
+      height: '60%',
+      borderRadius: 5,
+      borderColor: colors.tint,
+      borderWidth: 2,
+      marginBottom: 20,
+    },
+    confirmLocationButton: {
+      backgroundColor: colors.text,
+      padding: 15,
+      borderRadius: 5,
+      marginTop: 10,
+      width: 'fit-content',
+      alignItems: 'center',
+    },
+    confirmLocationButtonText: {
+      color: colors.accent,
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    cancelMapButton: {
+      backgroundColor: colors.surface,
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 10,
+      width: 'fit-content',
+      alignItems: 'center',
+    },
+    cancelMapButtonText: {
+      color: colors.text,
+      fontWeight: 'bold',
+      fontSize: 14,
+    },
+    gpsCoordinatesText: {
+      fontSize: 14,
+      color: colors.text,
+      fontWeight: 'bold',
+      marginTop: 10,
+      marginBottom: 5,
+      alignSelf: 'center',
+    },
+    gpsSuggestedAddressText: {
+      fontSize: 14,
+      color: colors.text,
+      fontStyle: 'italic',
+      marginTop: 10,
+    },
+    sexeSelectionContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginTop: 10,
+    },
+    sexeButton: {
+      flex: 1,
+      borderWidth: 2,
+      borderColor: colors.tint,
+      borderRadius: 2,
+      paddingVertical: 10,
+      marginHorizontal: 5,
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+    },
+    sexeButtonSelected: {
+      backgroundColor: colors.tint,
+      borderColor: colors.icon,
+    },
+    sexeButtonText: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    sexeButtonTextSelected: {
+      color: colors.blond,
+    },
+    homeButton: {
+      flex: 1,
+      borderWidth: 2,
+      borderColor: colors.tint,
+      borderRadius: 2,
+      paddingVertical: 10,
+      marginHorizontal: 5,
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      width: '50%',
+      alignSelf: 'center',
+      marginTop: 5,
+    },
+    homeButtonSelected: {
+      backgroundColor: colors.tint,
+      borderColor: colors.icon,
+    },
+    homeButtonText: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    homeButtonTextSelected: {
+      color: colors.blond,
+    },
 
-  label: {
-    fontWeight: '600',
-    marginTop: 15,
-  },
-  input: {
-    borderWidth: 2,
-    borderColor: '#ff7d00',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 5,
-    color: '#000',
-  },
-  errorInput: {
-    borderColor: 'red',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#ff7d00',
-    borderRadius: 2,
-    marginTop: 5,
-    paddingRight: 10,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 10,
-    fontSize: 14,
-    color: '#000',
-  },
-  passwordToggle: {
-    padding: 5,
-  },
-  error: {
-    color: 'red',
-    fontSize: 13,
-    marginTop: 5,
-  },
-  imageButton: {
-    backgroundColor: '#001524',
-    padding: 10,
-    borderRadius: 2,
-    marginTop: 10,
-    width: '50%',
-    alignSelf: 'center',
-    alignItems: 'center',
-  },
-  imageButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  imagePreview: {
-    width: 200,
-    height: 280,
-    marginTop: 10,
-    alignSelf: 'center',
-  },
-  note: {
-    marginTop: 20,
-    fontSize: 12,
-    fontStyle: 'italic',
-    fontWeight: 600,
-    color: '#001524',
-  },
-  submitButton: {
-    backgroundColor: '#001524',
-    padding: 10,
-    borderRadius: 4,
-    marginTop: 30,
-    width: '40%',
-    alignSelf: 'center',
-    alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    opacity: 0.4,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  iconSpacing: {
-    marginRight: 8,
-  },
-});
+    label: {
+      fontWeight: '600',
+      marginTop: 15,
+    },
+    input: {
+      borderWidth: 2,
+      borderColor: colors.tint,
+      backgroundColor: colors.surface,
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 5,
+      color: colors.textNormal,
+    },
+    errorInput: {
+      borderColor: 'red',
+    },
+    passwordContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: colors.tint,
+      backgroundColor: colors.surface,
+      borderRadius: 2,
+      marginTop: 5,
+      paddingRight: 10,
+    },
+    passwordInput: {
+      flex: 1,
+      padding: 10,
+      fontSize: 14,
+      color: colors.textNormal,
+    },
+    passwordToggle: {
+      padding: 5,
+    },
+    error: {
+      color: colors.errorText,
+      fontSize: 13,
+      marginTop: 5,
+    },
+    imageButton: {
+      backgroundColor: colors.blou,
+      padding: 10,
+      borderRadius: 2,
+      marginTop: 10,
+      width: 'fit-content',
+      alignSelf: 'center',
+      alignItems: 'center',
+    },
+    imageButtonText: {
+      color: colors.blond,
+      fontWeight: 'bold',
+    },
+    imagePreview: {
+      width: 200,
+      height: 280,
+      marginTop: 10,
+      alignSelf: 'center',
+    },
+    note: {
+      marginTop: 20,
+      fontSize: 12,
+      fontStyle: 'italic',
+      fontWeight: 600,
+      color: colors.greyDes,
+    },
+    submitButton: {
+      backgroundColor: colors.green,
+      padding: 10,
+      borderRadius: 4,
+      marginTop: 30,
+      width: 'fit-content',
+      alignSelf: 'center',
+      alignItems: 'center',
+    },
+    submitButtonDisabled: {
+      opacity: 0.4,
+    },
+    submitButtonText: {
+      color: colors.blond,
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    iconSpacing: {
+      marginRight: 8,
+    },
+  });
+};
 
 export default RegistrationForm;

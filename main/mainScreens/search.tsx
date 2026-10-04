@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TextInput, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert, Modal, Keyboard } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert, Modal, Keyboard, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ModalProductInfos from '../../modals-others/modalProductInfos';
-import ModalOrderQuantity from '../../modals-others/modalOrderQuantity';
-import { SearchLogic, SearchResult, PopularProduct } from '../calculation-logic/searchLogic';
-import { ProductNameKey, productNameTranslator, estimateInputLanguage, getProductSuggestions, loadTranslationsFromJson } from '../calculation-logic/logiqueNoms';
+import ModalProductInfos from '../modals-others/modalProductInfos';
+import ModalOrderQuantity from '../modals-others/modalOrderQuantity';
+import { SearchLogic, PopularProduct } from '../calculation-logic/searchLogic';
+import { estimateInputLanguage, getProductSuggestions, loadTranslationsFromJson } from '../calculation-logic/logiqueNoms';
 import * as ImagesLogic from '../calculation-logic/imagesLogic';
-import { Product } from '../../modals-others/modalStoreInfos';
+import { Product } from '../modals-others/modalMagasinInfos';
 import { containsArabic } from '../../translations/data/blockerArab';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 interface RecentSearchItem {
     term: string;
@@ -35,7 +36,7 @@ class SearchScreenService {
     public onSearchTermChange?: (term: string) => void;
     public onSearchTriggered?: (term: string) => void;
     public onSuggestionsChange?: (suggestions: string[]) => void;
-    public onResultsChange?: (results: SearchResult[]) => void;
+    public onResultsChange?: (results: Product[]) => void;
 
     constructor() {
         this.loadRecentSearches();
@@ -81,8 +82,24 @@ class SearchScreenService {
 
         await SearchLogic.updatePopularity(finalTerm);
         const results = await SearchLogic.performSearch(finalTerm, language || 'kab');
-        this.onResultsChange?.(results);
-
+        this.onResultsChange?.(
+            results.map((r) => ({
+                id: r.id,
+                $id: r.id,
+                name: r.name,
+                marque: r.marque,
+                prix: parseFloat(r.prix) || 0,
+                descriptionFr: r.descriptionFr,
+                descriptionKab: r.descriptionKab,
+                imageId: r.imageId,
+                store: r.store || '',
+                address: r.address || '',
+                valeurQuantite: r.valeur || 0,
+                uniteQuantite: r.unite || '',
+                image: { uri: '', width: 0, height: 0 },
+                category: { id: '', name: '' },
+            }))
+        );
         this.onSearchTriggered?.(finalTerm);
         this.setSearchTerm('');
     }
@@ -117,18 +134,21 @@ class SearchScreenService {
 const searchService = new SearchScreenService();
 
 export default function SearchScreen() {
-    const [searchTerm, setSearchTerm] = useState('');
     const { t, currentLang, setLanguage } = useAppTranslation();
+    const colorScheme = useColorScheme();
+    const theme = colorScheme === 'dark' ? 'dark' : 'light';
+    const styles = getStyles(theme);
+    const [searchTerm, setSearchTerm] = useState('');
     const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
     const [popularProducts, setPopularProducts] = useState<PopularProduct[]>([]);
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [searchResults, setSearchResults] = useState<Product[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [showResults, setShowResults] = useState(false);
     const [loadingPopular, setLoadingPopular] = useState(true);
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [userId, setUserId] = useState<string>('');
-    const [selectedProduct, setSelectedProduct] = useState<SearchResult | null>(null);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
@@ -210,7 +230,7 @@ export default function SearchScreen() {
         }, 150);
     };
 
-
+    const colors = Colors[theme];
     return (
         <View style={styles.container}>
             <View style={{ position: 'relative', marginBottom: 0 }}>
@@ -230,7 +250,7 @@ export default function SearchScreen() {
                         onPressIn={() => { if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current); }}
                     />
                     <TouchableOpacity style={styles.searchButton} onPress={handleSearchPress}>
-                        <Ionicons name="search" size={24} color="#ff7d00" />
+                        <Ionicons name="search" size={24} color={colors.tint} />
                     </TouchableOpacity>
                 </View>
                 {isInputFocused && (
@@ -253,13 +273,13 @@ export default function SearchScreen() {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                             <Text style={styles.sectionTitle}>{t('tab.research')}</Text>
                             <TouchableOpacity onPress={() => setShowResults(false)}>
-                                <Text style={{ color: '#ff7d00', fontWeight: '800' }}>{t('general.cancel')}</Text>
+                                <Text style={{ color: colors.tint, fontWeight: '800' }}>{t('general.cancel')}</Text>
                             </TouchableOpacity>
                         </View>
                         <FlatList
                             data={searchResults}
-                            keyExtractor={(item: SearchResult) => item.id}
-                            renderItem={({ item, index }: { item: SearchResult; index: number }) => (
+                            keyExtractor={(item: Product) => item.id}
+                            renderItem={({ item, index }: { item: Product; index: number }) => (
                                 <TouchableOpacity
                                     onPress={() => setSelectedProduct(item)}
                                     style={[styles.productBtn, { flexDirection: index % 2 === 0 ? 'row' : 'row-reverse' }]}
@@ -291,12 +311,12 @@ export default function SearchScreen() {
                                 keyExtractor={(item: RecentSearchItem) => item.term}
                                 renderItem={({ item }: { item: RecentSearchItem }) => (
                                     <View style={styles.itemRow}>
-                                        <Ionicons name="time-outline" size={18} color="#78290f" style={styles.itemIcon} />
+                                        <Ionicons name="time-outline" size={18} color={colors.globeu} style={styles.itemIcon} />
                                         <TouchableOpacity onPress={() => handleRecentItemSelect(item.term)} style={styles.itemTextContainer}>
                                             <Text style={styles.itemText}>{item.term}</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={() => searchService.removeRecentSearch(item.term)} style={styles.removeButton}>
-                                            <Ionicons name="close-circle-outline" size={20} color="#78290f" />
+                                            <Ionicons name="close-circle-outline" size={20} color={colors.globeu} />
                                         </TouchableOpacity>
                                     </View>
                                 )}
@@ -305,7 +325,7 @@ export default function SearchScreen() {
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>{t('popolar')}</Text>
                             {loadingPopular ? (
-                                <ActivityIndicator size="large" color="#0000ff" />
+                                <ActivityIndicator size="large" color={colors.green} />
                             ) : (
                                 <FlatList
                                     data={popularProducts}
@@ -321,246 +341,216 @@ export default function SearchScreen() {
                     </>
                 )}
             </View>
-            <ModalProductInfos
-                visible={!!selectedProduct}
-                onClose={() => setSelectedProduct(null)}
-                product={selectedProduct ? {
-                    id: selectedProduct.id,
-                    $id: selectedProduct.id,
-                    name: selectedProduct.name,
-                    marque: selectedProduct.marque,
-                    prix: parseFloat(selectedProduct.prix) || 0,
-                    descriptionFr: selectedProduct.descriptionFr,
-                    descriptionKab: selectedProduct.descriptionKab,
-                    imageId: selectedProduct.imageId,
-                    store: selectedProduct.store,
-                    address: selectedProduct.address,
-                    valeurQuantite: selectedProduct.valeur,
-                    uniteQuantite: selectedProduct.unite,
-                    image: {
-                        uri: selectedProduct.id ? ImagesLogic.buildProductPhoto(selectedProduct.id).detail : '',
-                        width: ImagesLogic.sizes().PRODUCT_DETAIL_W,
-                        height: ImagesLogic.sizes().PRODUCT_DETAIL_H
-                    },
-                    category: { id: '', name: '' }
-                } as Product : null}
-                onOrderPress={() => setShowOrderModal(true)}
-            />
-            <ModalOrderQuantity
-                visible={showOrderModal}
-                onClose={() => setShowOrderModal(false)}
-                product={selectedProduct ? {
-                    id: selectedProduct.id,
-                    $id: selectedProduct.id,
-                    name: selectedProduct.name,
-                    marque: selectedProduct.marque,
-                    prix: parseFloat(selectedProduct.prix) || 0,
-                    descriptionFr: selectedProduct.descriptionFr || "",
-                    descriptionKab: selectedProduct.descriptionKab || "",
-                    imageId: selectedProduct.imageId,
-                    valeurQuantite: selectedProduct.valeur,
-                    uniteQuantite: selectedProduct.unite,
-                    image: {
-                        uri: selectedProduct.id ? ImagesLogic.buildProductPhoto(selectedProduct.id).apercu : '',
-                        width: ImagesLogic.sizes().PRODUCT_APERCU_W,
-                        height: ImagesLogic.sizes().PRODUCT_APERCU_H
-                    },
-                    category: { id: '', name: '' }
-                } as Product : null}
-                onConfirm={(orderData: Product & { quantity: number; totalPrice: string }) => {
-                    console.log('Commande confirmée:', orderData);
-                    setShowOrderModal(false);
-                    setSelectedProduct(null);
-                }}
-                userId={userId}
-            />
-
+            {selectedProduct && (
+                <>
+                    <ModalProductInfos
+                        visible={!!selectedProduct}
+                        onClose={() => setSelectedProduct(null)}
+                        product={selectedProduct}
+                        onOrderPress={() => setShowOrderModal(true)}
+                    />
+                    <ModalOrderQuantity
+                        visible={showOrderModal}
+                        onClose={() => setShowOrderModal(false)}
+                        product={selectedProduct}
+                        onConfirm={(orderData: any) => {
+                            console.log('Commande confirmée:', orderData);
+                            setShowOrderModal(false);
+                            setSelectedProduct(null);
+                        }}
+                        userId={userId}
+                    />
+                </>
+            )}
         </View>
     )
 }
 
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        paddingTop: 50,
-    },
-    searchBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 0,
-        borderWidth: 1,
-        borderColor: '#15616d',
-        borderRadius: 8,
-        backgroundColor: '#fff',
-        paddingHorizontal: 10,
-    },
-    searchInput: {
-        flex: 1,
-        paddingVertical: 12,
-        fontSize: 16,
-        color: '#001524',
-    },
-    searchButton: {
-        padding: 8,
-        borderRadius: 50,
-        backgroundColor: '#ffecd1',
-    },
-    searchButtonText: {
-        fontSize: 24,
-        color: '#ff7d00',
-    },
-    section: {
-        marginBottom: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 10,
-        color: '#001524',
-        borderBottomWidth: 2,
-        borderBottomColor: '#ff7d00',
-        paddingBottom: 5,
-    },
-    itemRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ffecd1',
-        backgroundColor: '#fff',
-        paddingHorizontal: 15,
-    },
-    itemTextContainer: {
-        flex: 1,
-        marginLeft: 10,
-    },
-    itemText: {
-        fontSize: 16,
-        color: '#15616d',
-    },
-    itemIcon: {
-        fontSize: 18,
-        color: '#78290f',
-    },
-    removeButton: {
-        padding: 5,
-        borderRadius: 50,
-    },
-    removeButtonText: {
-        fontSize: 18,
-        color: '#78290f',
-    },
-    suggestionsList: {
-        paddingVertical: 2,
-    },
-    suggestionsDropdown: {
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#15616d',
-        borderRadius: 8,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 5,
-        maxHeight: 200,
-        overflow: 'hidden',
-    },
-    suggestionItem: {
-        paddingVertical: 12,
-        paddingHorizontal: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f8f8f8',
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    suggestionText: {
-        fontSize: 16,
-        color: '#333',
-        flex: 1,
-    },
-    productCard: {
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 15,
-        marginBottom: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.02)',
-    },
-    productInfo: {
-        flex: 1,
-    },
-    productName: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: '#001524',
-    },
-    productBrand: {
-        fontSize: 12,
-        color: '#15616d',
-        fontWeight: '600',
-        marginTop: 2,
-        textTransform: 'uppercase',
-    },
-    productPrice: {
-        fontSize: 16,
-        fontWeight: '900',
-        color: '#ff7d00',
-        marginLeft: 10,
-    },
-    productBtn: {
-        alignItems: 'center',
-        marginTop: 15,
-        borderRadius: 12,
-        paddingHorizontal: 5,
-        paddingVertical: 10,
-        overflow: 'hidden',
-        backgroundColor: '#ececec',
-    },
-    productBtnImageWrapper: {
-        width: '45%',
-        position: 'relative',
-    },
-    productBtnImage: {
-        width: '100%',
-        height: 130,
-    },
-    productBtnText: {
-        flex: 1,
-        padding: 5,
-        justifyContent: 'center',
-    },
-    productBtnNom: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#000',
-        marginBottom: 4,
-        marginLeft: 5,
-    },
-    productBtnStore: {
-        fontSize: 12,
-        color: '#15616d',
-        fontWeight: '600',
-        marginTop: 2,
-        marginLeft: 5,
-        textTransform: 'uppercase',
-    },
-    productBtnPrice: {
-        fontSize: 13,
-        fontWeight: '900',
-        color: '#ff7d00',
-        marginLeft: 25,
-        marginTop: 4,
-    },
-
-});
+const getStyles = (theme: 'light' | 'dark') => {
+    const colors = Colors[theme];
+    return StyleSheet.create({
+        container: {
+            flex: 1,
+            padding: 20,
+            paddingTop: 50,
+        },
+        searchBar: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 0,
+            borderWidth: 1,
+            borderColor: colors.green,
+            borderRadius: 8,
+            backgroundColor: colors.background,
+            paddingHorizontal: 10,
+        },
+        searchInput: {
+            flex: 1,
+            paddingVertical: 12,
+            marginBottom: 20,
+            fontSize: 16,
+            color: colors.textNormal,
+        },
+        searchButton: {
+            padding: 8,
+            borderRadius: 50,
+            backgroundColor: colors.accent,
+        },
+        searchButtonText: {
+            fontSize: 24,
+            color: colors.textNormal,
+        },
+        section: {
+            marginBottom: 20,
+        },
+        sectionTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginBottom: 10,
+            color: colors.text,
+            borderBottomWidth: 2,
+            borderBottomColor: colors.tint,
+            paddingBottom: 5,
+        },
+        itemRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.accent,
+            backgroundColor: colors.background,
+            paddingHorizontal: 15,
+        },
+        itemTextContainer: {
+            flex: 1,
+            marginLeft: 10,
+        },
+        itemText: {
+            fontSize: 16,
+            color: colors.textNormal,
+        },
+        itemIcon: {
+            fontSize: 18,
+            color: colors.globeu,
+        },
+        removeButton: {
+            padding: 5,
+            borderRadius: 50,
+        },
+        removeButtonText: {
+            fontSize: 18,
+            color: colors.globeu,
+        },
+        suggestionsList: {
+            paddingVertical: 2,
+        },
+        suggestionsDropdown: {
+            backgroundColor: colors.background,
+            borderWidth: 1,
+            borderColor: colors.green,
+            borderRadius: 8,
+            elevation: 5,
+            shadowColor: colors.noir,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 5,
+            maxHeight: 200,
+            overflow: 'hidden',
+        },
+        suggestionItem: {
+            paddingVertical: 12,
+            paddingHorizontal: 15,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.blond,
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+        suggestionText: {
+            fontSize: 16,
+            color: colors.textNormal,
+            flex: 1,
+        },
+        productCard: {
+            backgroundColor: colors.background,
+            borderRadius: 20,
+            padding: 15,
+            marginBottom: 12,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            shadowColor: colors.noir,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 5,
+            elevation: 2,
+            borderWidth: 1,
+            borderColor: colors.blou,
+        },
+        productInfo: {
+            flex: 1,
+        },
+        productName: {
+            fontSize: 16,
+            fontWeight: '800',
+            color: colors.blou,
+        },
+        productBrand: {
+            fontSize: 12,
+            color: colors.green,
+            fontWeight: '600',
+            marginTop: 2,
+            textTransform: 'uppercase',
+        },
+        productPrice: {
+            fontSize: 16,
+            fontWeight: '900',
+            color: colors.tint,
+            marginLeft: 10,
+        },
+        productBtn: {
+            alignItems: 'center',
+            marginTop: 15,
+            borderRadius: 12,
+            paddingHorizontal: 5,
+            paddingVertical: 10,
+            overflow: 'hidden',
+            backgroundColor: colors.background,
+        },
+        productBtnImageWrapper: {
+            width: '45%',
+            position: 'relative',
+        },
+        productBtnImage: {
+            width: '100%',
+            height: 130,
+        },
+        productBtnText: {
+            flex: 1,
+            padding: 5,
+            justifyContent: 'center',
+        },
+        productBtnNom: {
+            fontSize: 14,
+            fontWeight: '700',
+            color: colors.text,
+            marginBottom: 4,
+            marginLeft: 5,
+        },
+        productBtnStore: {
+            fontSize: 12,
+            color: colors.green,
+            fontWeight: '600',
+            marginTop: 2,
+            marginLeft: 5,
+            textTransform: 'uppercase',
+        },
+        productBtnPrice: {
+            fontSize: 13,
+            fontWeight: '900',
+            color: colors.tint,
+            marginLeft: 25,
+            marginTop: 4,
+        },
+    });
+};

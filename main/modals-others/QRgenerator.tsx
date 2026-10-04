@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, useColorScheme } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { databases, config } from '../calculation-logic/appwriteConfig';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 export interface Order {
   id: string;
@@ -31,6 +32,10 @@ interface QRGeneratorProps {
 
 const QRgenerator: React.FC<QRGeneratorProps> = ({ orderData, externalDriverDistance, onSignatureCompleted }: QRGeneratorProps) => {
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
   const [qrSignature, setQrSignature] = useState<QRSignature | null>(null);
   const [scanResult, setScanResult] = useState<string>('');
   const [signatureHistory, setSignatureHistory] = useState<QRSignature[]>([]);
@@ -131,12 +136,12 @@ const QRgenerator: React.FC<QRGeneratorProps> = ({ orderData, externalDriverDist
           </View>
 
           <View style={styles.qrContainer}>
-            {qrSignature && (
+            {qrSignature && qrSignature.isValid && (
               <QRCode
                 value={qrSignature.token}
                 size={styles.qrCode.size}
                 backgroundColor={styles.qrCode.backgroundColor}
-                color={qrSignature.isValid ? styles.qrCode.colorValid : styles.qrCode.colorInvalid}
+                color={styles.qrCode.colorValid}
               />
             )}
           </View>
@@ -166,186 +171,189 @@ const QRgenerator: React.FC<QRGeneratorProps> = ({ orderData, externalDriverDist
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f4ff',
-  },
-  statusBar: {
-    barStyle: 'dark-content' as const,
-    backgroundColor: '#f0f4ff',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#001524',
-    marginBottom: 4,
-  },
-  card: {
-    backgroundColor: '#fbfbfb',
-    marginHorizontal: 10,
-    marginBottom: 5,
-    borderRadius: 5,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#001524',
-    textDecorationLine: 'underline',
-    textDecorationColor: '#ff7d00',
-    marginLeft: 8,
-    textDecorationThickness: 2,
-  },
-  infoRow: {
-    marginBottom: 5,
-  },
-  infoLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  infoLabel: {
-    fontSize: 15,
-    color: '#001524',
-    fontWeight: 500,
-    marginLeft: 6,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#000',
-    marginLeft: 6,
-  },
-  qrContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    marginBottom: 10,
-  },
-  qrCode: {
-    size: 200,
-    backgroundColor: '#ffffff',
-    colorValid: '#001524',
-    colorInvalid: '#15616d',
-  },
-  statusValid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    backgroundColor: '#001524',
-    borderRadius: 5,
-    marginBottom: 16,
-    alignSelf: 'center',
-    width: 'auto',
-  },
-  statusInvalid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    backgroundColor: '#ffecd1',
-    borderRadius: 5,
-    marginBottom: 16,
-    alignSelf: 'center',
-    width: 'auto',
-  },
-  statusTextValid: {
-    fontSize: 15,
-    fontWeight: 500,
-    color: '#fff',
-    marginLeft: 8,
-  },
-  statusTextInvalid: {
-    fontSize: 15,
-    fontWeight: 500,
-    color: '#000',
-    marginLeft: 8,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  buttonGenerate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#15616d',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 5,
-    alignSelf: 'center',
-    minWidth: 0,
-    maxWidth: '70%',
-    marginHorizontal: 'auto',
-  },
-  buttonTextGenerate: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 500,
-    marginLeft: 8,
-  },
-  iconPackage: {
-    name: 'cube-outline',
-    size: 24,
-    color: '#ff7d00',
-  },
-  iconDocument: {
-    name: 'document-text-outline',
-    size: 18,
-    color: '#000',
-  },
-  iconPerson: {
-    name: 'person-outline',
-    size: 18,
-    color: '#000',
-  },
-  iconCalendar: {
-    name: 'calendar-outline',
-    size: 18,
-    color: '#000',
-  },
-  iconQr: {
-    name: 'qr-code-outline',
-    size: 24,
-    color: '#ff7d00',
-  },
-  iconCheckCircle: {
-    name: 'checkmark-circle',
-    size: 24,
-    color: '#fff',
-  },
-  iconCloseCircle: {
-    name: 'close-circle',
-    size: 24,
-    color: '#fff',
-  },
-  iconRefresh: {
-    name: 'refresh-outline',
-    size: 20,
-    color: '#ffffff',
-  },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    statusBar: {
+      barStyle: 'dark-content' as const,
+      backgroundColor: colors.surface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    header: {
+      paddingVertical: 24,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      marginHorizontal: 10,
+      marginBottom: 5,
+      borderRadius: 5,
+      padding: 16,
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 16,
+    },
+    cardTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      textDecorationLine: 'underline',
+      textDecorationColor: colors.tint,
+      marginLeft: 8,
+      textDecorationThickness: 2,
+    },
+    infoRow: {
+      marginBottom: 5,
+    },
+    infoLabelContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 5,
+    },
+    infoLabel: {
+      fontSize: 15,
+      color: colors.textNormal,
+      fontWeight: 500,
+      marginLeft: 6,
+    },
+    infoValue: {
+      fontSize: 14,
+      color: colors.greyDes,
+      marginLeft: 6,
+    },
+    qrContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      marginBottom: 10,
+    },
+    qrCode: {
+      size: 200,
+      backgroundColor: colors.blond,
+      colorValid: colors.noir,
+      colorInvalid: colors.azuvagh,
+    },
+    statusValid: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+      maxPaddingHorizontal: 15,
+      backgroundColor: colors.green,
+      borderRadius: 5,
+      marginBottom: 16,
+      alignSelf: 'center',
+      width: 'fit-content',
+    },
+    statusInvalid: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+      maxPaddingHorizontal: 15,
+      backgroundColor: colors.azuvagh,
+      borderRadius: 5,
+      marginBottom: 16,
+      alignSelf: 'center',
+      width: 'fit-content',
+    },
+    statusTextValid: {
+      fontSize: 15,
+      fontWeight: 500,
+      color: colors.blond,
+      marginLeft: 8,
+    },
+    statusTextInvalid: {
+      fontSize: 15,
+      fontWeight: 500,
+      color: colors.blond,
+      marginLeft: 8,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    buttonGenerate: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.blou,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 5,
+      alignSelf: 'center',
+      minWidth: 0,
+      maxWidth: '70%',
+      marginHorizontal: 'auto',
+    },
+    buttonTextGenerate: {
+      color: colors.blond,
+      fontSize: 15,
+      fontWeight: 500,
+      marginLeft: 8,
+    },
+    iconPackage: {
+      name: 'cube-outline',
+      size: 24,
+      color: colors.tint,
+    },
+    iconDocument: {
+      name: 'document-text-outline',
+      size: 18,
+      color: colors.icon,
+    },
+    iconPerson: {
+      name: 'person-outline',
+      size: 18,
+      color: colors.icon,
+    },
+    iconCalendar: {
+      name: 'calendar-outline',
+      size: 18,
+      color: colors.icon,
+    },
+    iconQr: {
+      name: 'qr-code-outline',
+      size: 24,
+      color: colors.tint,
+    },
+    iconCheckCircle: {
+      name: 'checkmark-circle',
+      size: 24,
+      color: colors.blond,
+    },
+    iconCloseCircle: {
+      name: 'close-circle',
+      size: 24,
+      color: colors.blond,
+    },
+    iconRefresh: {
+      name: 'refresh-outline',
+      size: 20,
+      color: colors.blond,
+    },
+  });
+};
 
 export default QRgenerator;

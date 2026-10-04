@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, useColorScheme } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Linking from 'expo-linking';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 const ForgotPasswordModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState(false);
@@ -66,7 +71,7 @@ const ForgotPasswordModal = ({ visible, onClose }: { visible: boolean; onClose: 
         <View style={styles.container}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="chevron-back" size={24} color="#15616d" />
+              <Ionicons name="chevron-back" size={24} color={colors.icon} />
             </TouchableOpacity>
             <Text style={styles.title}>
               <Text style={styles.title}>{t('resetPassword')}</Text>
@@ -80,28 +85,28 @@ const ForgotPasswordModal = ({ visible, onClose }: { visible: boolean; onClose: 
                 <TextInput
                   style={styles.passwordInput}
                   placeholder="**********"
-                  placeholderTextColor="#313638"
+                  placeholderTextColor={colors.greyDes}
                   value={newPassword}
                   onChangeText={(text: string) => { setNewPassword(text); setPasswordErrors([]); }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                 />
                 <TouchableOpacity onPress={() => setShowPassword((prev: boolean) => !prev)} style={styles.eyeButton}>
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#001524" />
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.icon} />
                 </TouchableOpacity>
               </View>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
                   placeholder="**********"
-                  placeholderTextColor="#313638"
+                  placeholderTextColor={colors.greyDes}
                   value={confirmPassword}
                   onChangeText={(text: string) => { setConfirmPassword(text); setPasswordErrors([]); }}
                   secureTextEntry={!showConfirm}
                   autoCapitalize="none"
                 />
                 <TouchableOpacity onPress={() => setShowConfirm((prev: boolean) => !prev)} style={styles.eyeButton}>
-                  <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={22} color="#001524" />
+                  <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.icon} />
                 </TouchableOpacity>
               </View>
               {passwordErrors.map((err: string, i: number) => (
@@ -117,7 +122,7 @@ const ForgotPasswordModal = ({ visible, onClose }: { visible: boolean; onClose: 
               <TextInput
                 style={styles.input}
                 placeholder={t('emailPlaceholder')}
-                placeholderTextColor="#313638"
+                placeholderTextColor={colors.icon}
                 value={email}
                 onChangeText={(text: string) => { setEmail(text); setInvalidEmail(false); }}
                 keyboardType="email-address"
@@ -139,95 +144,99 @@ const ForgotPasswordModal = ({ visible, onClose }: { visible: boolean; onClose: 
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '85%',
-    backgroundColor: '#fafafa',
-    borderRadius: 10,
-    padding: 24,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#15616d',
-    alignSelf: 'center',
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#001524',
-    marginBottom: 6,
-    marginTop: 10,
-  },
-  input: {
-    backgroundColor: '#f0f0f0',
-    borderWidth: 2,
-    borderColor: '#15616d',
-    borderRadius: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#000',
-  },
-  button: {
-    backgroundColor: '#15616d',
-    borderRadius: 5,
-    paddingVertical: 12,
-    alignSelf: 'center',
-    marginTop: 15,
-    width: '50%',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    alignSelf: 'center',
-  },
-  confirmText: {
-    color: '#000',
-    fontSize: 16,
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    gap: 10,
-  },
-  errorText: {
-    color: '#ff7d00',
-    fontSize: 14,
-    fontWeight: 600,
-    marginTop: 4,
-    alignSelf: 'center',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fafafa',
-    borderWidth: 2,
-    borderColor: '#15616d',
-    borderRadius: 5,
-  },
-  passwordInput: {
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#000',
-  },
-  eyeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    container: {
+      width: '85%',
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      padding: 24,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      alignSelf: 'center',
+      marginBottom: 8,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.text,
+      marginBottom: 6,
+      marginTop: 10,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      borderColor: colors.green,
+      borderRadius: 5,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.textNormal,
+    },
+    button: {
+      backgroundColor: colors.green,
+      borderRadius: 5,
+      paddingVertical: 12,
+      alignSelf: 'center',
+      marginTop: 15,
+      width: 'auto',
+      paddingHorizontal: 15,
+    },
+    buttonText: {
+      color: colors.blond,
+      fontSize: 16,
+      fontWeight: '600',
+      alignSelf: 'center',
+    },
+    confirmText: {
+      color: colors.textNormal,
+      fontSize: 16,
+      textAlign: 'center',
+      marginVertical: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 20,
+      gap: 10,
+    },
+    errorText: {
+      color: colors.azuvagh,
+      fontSize: 14,
+      fontWeight: 600,
+      marginTop: 4,
+      alignSelf: 'center',
+    },
+    passwordContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      borderColor: colors.green,
+      borderRadius: 5,
+    },
+    passwordInput: {
+      flex: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.textNormal,
+    },
+    eyeButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+  });
+};
 
 export default ForgotPasswordModal;

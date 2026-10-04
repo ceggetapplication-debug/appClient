@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Dimensions, Modal, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Dimensions, Modal, Image, TouchableOpacity, Alert, ScrollView, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchStoresByType, fetchProductsByStore, AppwriteStoreDoc, AppwriteProductDoc } from '../../backends/home_backend';
 import { getHomeGroupes } from '../calculation-logic/homeDatat';
@@ -8,12 +8,12 @@ import * as ImagesLogic from '../calculation-logic/imagesLogic';
 import { NavigationProp, ParamListBase } from '@react-navigation/native';
 import ModalProductInfos from '../modals-others/modalProductInfos';
 import ModalOrderQuantity from '../modals-others/modalOrderQuantity';
-import StoreInfoScreen, { Store, StoreDetailed, Category, Product, Group, StoreType, ProductType } from '../modals-others/modalStoreInfos';
+import StoreInfoScreen, { Store, StoreDetailed, Category, Product, Group, StoreType, ProductType } from '../modals-others/modalMagasinInfos';
 import ModalMapBuyer from '../modals-others/modalMapBuyer';
-import { referralManager } from '../calculation-logic/calculLivraison';
-import { archiveOldDeliveries, cleanupOldStories, cleanupInactiveAccounts } from '../../backends/admin_backend';
+import { Colors } from '@/constants/Colors';
+import { archiveOldDeliveries, cleanupOldStories, cleanupInactiveAccounts } from '@/backends/admin-backend';
 import { databases, config, account, Query, ID } from '../calculation-logic/appwriteConfig';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 type TranslationKeys = string;
 
@@ -49,44 +49,49 @@ const DiscountBadge = ({
 interface HomeScreenProps {
   navigation: NavigationProp<ParamListBase>;
 }
-
 const CategoryBar = React.memo(({ categories, selectedId, onSelect }: {
   categories: Category[];
   selectedId: string | undefined;
   onSelect: (c: Category) => void;
-}) => (
-  <View style={styles.categoryChips}>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryChipsContent}>
-      {categories.filter(Category =>
-        (Category.products && Category.products.length > 0) ||
-        (Category.productTypes && Category.productTypes.length > 0)
-      ).map((Category) => {
-        const isActive = selectedId === Category.id;
-        return (
-          <TouchableOpacity
-            key={Category.id}
-            onPress={() => onSelect(Category)}
-            style={styles.categoryChipItem}
-          >
-            <View style={styles.categoryChipImageWrapper}>
-              <Image
-                source={ImagesLogic.getCategoryPhoto(Category.id)}
-                style={styles.categoryChipImage}
-                fadeDuration={0}
-              />
-              <View style={[styles.categoryChipBorder, { borderColor: isActive ? '#15616d' : 'transparent' }]} />
-            </View>
-            <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
-              {Category.name}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
-  </View>
-));
+}) => {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const colors = Colors[theme];
+  const styles = getStyles(theme);
 
-const BORDER_COLOR = '#001524';
+  return (
+    <View style={styles.categoryChips}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryChipsContent}>
+        {categories.filter(Category =>
+          (Category.products && Category.products.length > 0) ||
+          (Category.productTypes && Category.productTypes.length > 0)
+        ).map((Category) => {
+          const isActive = selectedId === Category.id;
+          return (
+            <TouchableOpacity
+              key={Category.id}
+              onPress={() => onSelect(Category)}
+              style={styles.categoryChipItem}
+            >
+              <View style={styles.categoryChipImageWrapper}>
+                <Image
+                  source={ImagesLogic.getCategoryPhoto(Category.id)}
+                  style={styles.categoryChipImage}
+                  fadeDuration={0}
+                />
+                <View style={[styles.categoryChipBorder, { borderColor: isActive ? colors.green : 'transparent' }]} />
+              </View>
+              <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
+                {Category.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+});
+
 const FIGURE_SIZE = Math.min(220, SCREEN_WIDTH * 0.42);
 
 interface Shape {
@@ -161,7 +166,13 @@ interface FigureProps {
   label: string;
   imageId?: string | null;
 }
+
 const Figure = React.memo(({ index, onPress, label, imageId }: FigureProps): React.JSX.Element => {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const colors = Colors[theme];
+  const styles = getStyles(theme);
+
   const { vbW, vbH, path } = SHAPES[index];
   const scale = FIGURE_SIZE / Math.max(vbW, vbH);
   const dispW = Math.round(vbW * scale);
@@ -188,7 +199,7 @@ const Figure = React.memo(({ index, onPress, label, imageId }: FigureProps): Rea
             preserveAspectRatio="xMidYMid meet"
             clipPath={`url(#${clipId})`}
           />
-          <Path d={path} fill="#f5f5f5" stroke={BORDER_COLOR} strokeWidth={6} strokeLinejoin="round" />
+          <Path d={path} fill={colors.background} stroke={colors.icon} strokeWidth={6} strokeLinejoin="round" />
         </Svg>
       </TouchableOpacity>
       <Text style={styles.figureLabel}>{label}</Text>
@@ -197,6 +208,9 @@ const Figure = React.memo(({ index, onPress, label, imageId }: FigureProps): Rea
 });
 
 function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
   const [selectedProductForDetails, setSelectedProductForDetails] = useState<Product | null>(null);
   const [isProductDetailsVisible, setIsProductDetailsVisible] = useState(false);
   const [isAddToCartModalVisible, setIsAddToCartModalVisible] = useState(false);
@@ -468,11 +482,12 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
       : (selectedCategory?.products ?? []);
     const products = allProducts;
 
+    const colors = Colors[theme];
     return (
       <View style={styles.hierarchyScreen}>
         <View style={styles.hierarchyHeader}>
           <TouchableOpacity onPress={() => setSelectedStore(null)}>
-            <Ionicons name="chevron-back" size={32} color={BORDER_COLOR} />
+            <Ionicons name="chevron-back" size={32} color={colors.icon} />
           </TouchableOpacity>
           <Text style={styles.hierarchyTitle}>{selectedStore?.name}</Text>
         </View>
@@ -500,7 +515,7 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
                   <Ionicons
                     name={openProductType === type.id ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color="#15616d"
+                    color={colors.green}
                   />
                 </TouchableOpacity>
                 {openProductType === type.id && type.products.map((product: Product, index: number) => (
@@ -586,13 +601,15 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
       </View>
     );
   };
+
+  const colors = Colors[theme];
   const renderStores = () => {
     const stores = (selectedTypeStore?.stores ?? selectedTypeStore?.storesD ?? []) as Store[];
     return (
       <View style={styles.hierarchyScreen}>
         <View style={styles.hierarchyHeader}>
           <TouchableOpacity onPress={goBack}>
-            <Ionicons name="chevron-back" size={32} color={BORDER_COLOR} />
+            <Ionicons name="chevron-back" size={32} color={colors.icon} />
           </TouchableOpacity>
           <Text style={styles.hierarchyTitle}>{selectedTypeStore?.name}</Text>
         </View>
@@ -635,7 +652,7 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
     return (
       <TouchableOpacity onPress={onPress} style={[styles.typeStoreBtn, { width: w, height: h }]}>
         <Svg style={StyleSheet.absoluteFill} width={w} height={h}>
-          <Path d={path} fill="#15616d" stroke="#ff7d00" strokeWidth={1.5} />
+          <Path d={path} fill={colors.green} stroke={colors.tint} strokeWidth={1.5} />
         </Svg>
         <Text
           style={styles.typeStoreBtnText}
@@ -655,7 +672,7 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
       <View style={styles.hierarchyScreen}>
         <View style={styles.hierarchyHeader}>
           <TouchableOpacity onPress={goBack}>
-            <Ionicons name="chevron-back" size={32} color={BORDER_COLOR} />
+            <Ionicons name="chevron-back" size={32} color={colors.icon} />
           </TouchableOpacity>
           <Text style={styles.hierarchyTitle}>{selectedGroupe?.name}</Text>
         </View>
@@ -719,7 +736,7 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
   if (isLoadingData && !selectedGroupe) {
     return (
       <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#15616d" />
+        <ActivityIndicator size="large" color={colors.green} />
       </View>
     );
   }
@@ -839,7 +856,7 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
           style={{ position: 'absolute', top: 40, right: 20, zIndex: 999 }}
           onPress={() => setIsMapBuyerVisible(false)}
         >
-          <Ionicons name="close-circle" size={40} color="#001524" />
+          <Ionicons name="close-circle" size={40} color={colors.icon} />
         </TouchableOpacity>
       </Modal>
 
@@ -848,347 +865,350 @@ function Homescreen({ navigation }: HomeScreenProps): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  figure0: {
-    marginTop: 40,
-  },
-  figure1: {
-    marginTop: 85,
-  },
-  figure2: {
-    marginTop: -20,
-  },
-  figure3: {
-    marginTop: 15,
-  },
-  figure4: {
-    paddingLeft: SCREEN_WIDTH * 0.05,
-    marginTop: -30,
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: '#ff7d00',
-    paddingVertical: 30,
-    paddingHorizontal: 10,
-    overflow: 'visible',
-  },
-  background: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#ff7d00',
-    opacity: 0.5,
-  },
-  drop: {
-    position: 'absolute',
-    backgroundColor: '#15616d',
-    opacity: 0.5,
-    borderRadius: 999,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-    overflow: 'visible',
-  },
-  figureWrapper: {
-    alignItems: 'center',
-    gap: 10,
-  },
-  figureLabel: {
-    fontSize: 18,
-    color: '#001524',
-    marginBottom: 10,
-    fontStyle: 'italic',
-    fontWeight: 'bold',
-    marginTop: -8,
-  },
-  hierarchyScreen: {
-    flex: 1,
-  },
-  buttonList: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  hierarchyButtonSub: {
-    fontSize: 13,
-    color: '#595959',
-    marginTop: 4,
-  },
-  emptyText: {
-    color: BORDER_COLOR,
-    fontSize: 15,
-    opacity: 0.6,
-    textAlign: 'center',
-    marginTop: 40,
-  },
-  gpsButton: {
-    position: 'absolute',
-    top: 35,
-    right: 20,
-    zIndex: 100,
-    backgroundColor: '#ffecd1',
-    borderRadius: 50,
-    padding: 10,
-  },
-  screenGroupe: {
-    flex: 1,
-    backgroundColor: '#fafafa',
-    paddingVertical: 30,
-    paddingHorizontal: 16,
-  },
-  hierarchyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    marginTop: 5,
-    gap: 12,
-  },
-  hierarchyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    color: BORDER_COLOR,
-  },
-  typesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 0,
-    paddingTop: 10,
-  },
-  storeBtn: {
-    width: SCREEN_WIDTH * 0.8,
-    borderRadius: 25,
-    overflow: 'hidden',
-    backgroundColor: '#e5e5e5',
-    marginBottom: 16,
-  },
-  storeBtnImage: {
-    width: '100%',
-    height: 130,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  storeBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#001524',
-    padding: 10,
-    textAlign: 'center',
-  },
-  storeList: {
-    flexDirection: 'column',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  categoryChips: {
-    marginBottom: 20,
-  },
-  categoryChipsContent: {
-    paddingLeft: 12,
-    paddingRight: 16,
-    gap: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryChipItem: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  categoryChipImage: {
-    width: 52,
-    height: 52,
-    resizeMode: 'cover',
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#c8c8c8',
-    textAlign: 'center',
-    maxWidth: 200,
-  },
-  categoryChipTextActive: {
-    color: '#15616d',
-    fontWeight: '800',
-  },
-  categoryChipImageWrapper: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  productTypeBtn: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    marginTop: 10,
-    backgroundColor: 'transparent',
-  },
-  productTypeBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#15616d',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#ff7d00',
-  },
-  productBtn: {
-    alignItems: 'center',
-    marginTop: 15,
-    borderRadius: 12,
-    paddingHorizontal: 5,
-    paddingVertical: 10,
-    overflow: 'hidden',
-    backgroundColor: '#ececec',
-  },
-  productBtnImageWrapper: {
-    width: '45%',
-    position: 'relative',
-  },
-  productBtnImage: {
-    width: '100%',
-    height: 130,
-  },
-  productBtnText: {
-    flex: 1,
-    padding: 5,
-    justifyContent: 'center',
-  },
-  productBtnNom: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 4,
-    marginLeft: 5,
-  },
-  productBtnMarque: {
-    fontSize: 14,
-    color: '#001524',
-    marginBottom: 6,
-    fontStyle: 'italic',
-    marginLeft: 25,
-  },
-  productBtnPrixRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginLeft: 5,
-  },
-  productBtnOldPrix: {
-    fontSize: 13,
-    color: '#7d7d7d',
-    textDecorationLine: 'line-through',
-  },
-  productBtnPrix: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#000',
-    marginLeft: 25,
-  },
-  productBtnPrixProm: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#000',
-  },
-  categoryChipBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 52,
-    height: 52,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  discountBadgeText: {
-    top: 12,
-    left: 4,
-    fontSize: 12,
-    color: '#fff',
-  },
-  discountBadgeLeft: {
-    position: 'absolute',
-    top: -10,
-    left: -5,
-  },
-  discountBadgeRight: {
-    position: 'absolute',
-    top: -10,
-    right: -5,
-  },
-  storeDetailsPhotosScroll: {
-    gap: 10,
-    paddingHorizontal: 16,
-  },
-  detailLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    color: BORDER_COLOR,
-    marginBottom: 4,
-    marginTop: 10,
-    marginLeft: 0,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#000',
-    marginBottom: 4,
-    paddingHorizontal: 4,
-    marginLeft: -10,
-  },
-  detailPhotoCover: {
-    width: '100%',
-    height: 150,
-    borderRadius: 16,
-    marginBottom: 12,
-  },
-  detailPhotoShared: {
-    width: 280,
-    height: 280,
-    borderRadius: 12,
-    marginTop: 10,
-  },
-  detailStoreNom: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    color: '#15616d',
-    marginBottom: 12,
-  },
-  detailTextGris: {
-    fontSize: 14,
-    color: '#595959',
-    marginBottom: 4,
-    paddingHorizontal: 4,
-  },
-  typeStoreBtn: {
-    margin: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 0,
-    marginRight: 0,
-    gap: 5,
-  },
-  typeStoreBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    width: 140,
-    zIndex: 1,
-  },
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    figure0: {
+      marginTop: 40,
+    },
+    figure1: {
+      marginTop: 85,
+    },
+    figure2: {
+      marginTop: -20,
+    },
+    figure3: {
+      marginTop: 15,
+    },
+    figure4: {
+      paddingLeft: SCREEN_WIDTH * 0.05,
+      marginTop: -30,
+    },
+    screen: {
+      flex: 1,
+      backgroundColor: colors.tint,
+      paddingVertical: 30,
+      paddingHorizontal: 10,
+      overflow: 'visible',
+    },
+    background: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.tint,
+      opacity: 0.5,
+    },
+    drop: {
+      position: 'absolute',
+      backgroundColor: colors.tint,
+      opacity: 0.5,
+      borderRadius: 999,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'flex-start',
+      marginBottom: 20,
+      overflow: 'visible',
+    },
+    figureWrapper: {
+      alignItems: 'center',
+      gap: 10,
+    },
+    figureLabel: {
+      fontSize: 18,
+      color: colors.icon,
+      marginBottom: 10,
+      fontStyle: 'italic',
+      fontWeight: 'bold',
+      marginTop: -8,
+    },
+    hierarchyScreen: {
+      flex: 1,
+    },
+    buttonList: {
+      paddingHorizontal: 16,
+      paddingBottom: 40,
+    },
+    hierarchyButtonSub: {
+      fontSize: 13,
+      color: colors.greyDes,
+      marginTop: 4,
+    },
+    emptyText: {
+      color: colors.icon,
+      fontSize: 15,
+      opacity: 0.6,
+      textAlign: 'center',
+      marginTop: 40,
+    },
+    gpsButton: {
+      position: 'absolute',
+      top: 35,
+      right: 20,
+      zIndex: 100,
+      backgroundColor: colors.background,
+      borderRadius: 50,
+      padding: 10,
+    },
+    screenGroupe: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingVertical: 30,
+      paddingHorizontal: 16,
+    },
+    hierarchyHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      marginBottom: 20,
+      marginTop: 5,
+      gap: 12,
+    },
+    hierarchyTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+      color: colors.icon,
+    },
+    typesContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: 0,
+      paddingTop: 10,
+    },
+    storeBtn: {
+      width: SCREEN_WIDTH * 0.8,
+      borderRadius: 25,
+      overflow: 'hidden',
+      backgroundColor: colors.background,
+      marginBottom: 16,
+    },
+    storeBtnImage: {
+      width: '100%',
+      height: 130,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+    },
+    storeBtnText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.icon,
+      padding: 10,
+      textAlign: 'center',
+    },
+    storeList: {
+      flexDirection: 'column',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingBottom: 40,
+    },
+    categoryChips: {
+      marginBottom: 20,
+    },
+    categoryChipsContent: {
+      paddingLeft: 12,
+      paddingRight: 16,
+      gap: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    categoryChipItem: {
+      alignItems: 'center',
+      gap: 6,
+    },
+    categoryChipImage: {
+      width: 52,
+      height: 52,
+      resizeMode: 'cover',
+    },
+    categoryChipText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.icon,
+      textAlign: 'center',
+      maxWidth: 200,
+    },
+    categoryChipTextActive: {
+      color: colors.green,
+      fontWeight: '800',
+    },
+    categoryChipImageWrapper: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    productTypeBtn: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 2,
+      paddingHorizontal: 4,
+      marginTop: 10,
+      backgroundColor: 'transparent',
+    },
+    productTypeBtnText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.green,
+      borderBottomWidth: 1.5,
+      borderBottomColor: colors.tint,
+    },
+    productBtn: {
+      alignItems: 'center',
+      marginTop: 15,
+      borderRadius: 12,
+      paddingHorizontal: 5,
+      paddingVertical: 10,
+      overflow: 'hidden',
+      backgroundColor: colors.background,
+    },
+    productBtnImageWrapper: {
+      width: '45%',
+      position: 'relative',
+    },
+    productBtnImage: {
+      width: '100%',
+      height: 130,
+    },
+    productBtnText: {
+      flex: 1,
+      padding: 5,
+      justifyContent: 'center',
+    },
+    productBtnNom: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.noir,
+      marginBottom: 4,
+      marginLeft: 5,
+    },
+    productBtnMarque: {
+      fontSize: 14,
+      color: colors.icon,
+      marginBottom: 6,
+      fontStyle: 'italic',
+      marginLeft: 25,
+    },
+    productBtnPrixRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginLeft: 5,
+    },
+    productBtnOldPrix: {
+      fontSize: 13,
+      color: colors.greyDes,
+      textDecorationLine: 'line-through',
+    },
+    productBtnPrix: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.noir,
+      marginLeft: 25,
+    },
+    productBtnPrixProm: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.noir,
+    },
+    categoryChipBorder: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: 52,
+      height: 52,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    discountBadgeText: {
+      top: 12,
+      left: 4,
+      fontSize: 12,
+      color: colors.blond,
+    },
+    discountBadgeLeft: {
+      position: 'absolute',
+      top: -10,
+      left: -5,
+    },
+    discountBadgeRight: {
+      position: 'absolute',
+      top: -10,
+      right: -5,
+    },
+    storeDetailsPhotosScroll: {
+      gap: 10,
+      paddingHorizontal: 16,
+    },
+    detailLabel: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+      color: colors.icon,
+      marginBottom: 4,
+      marginTop: 10,
+      marginLeft: 0,
+    },
+    detailText: {
+      fontSize: 14,
+      color: colors.noir,
+      marginBottom: 4,
+      paddingHorizontal: 4,
+      marginLeft: -10,
+    },
+    detailPhotoCover: {
+      width: '100%',
+      height: 150,
+      borderRadius: 16,
+      marginBottom: 12,
+    },
+    detailPhotoShared: {
+      width: 280,
+      height: 280,
+      borderRadius: 12,
+      marginTop: 10,
+    },
+    detailStoreNom: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+      color: colors.green,
+      marginBottom: 12,
+    },
+    detailTextGris: {
+      fontSize: 14,
+      color: colors.greyDes,
+      marginBottom: 4,
+      paddingHorizontal: 4,
+    },
+    typeStoreBtn: {
+      margin: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 0,
+      marginRight: 0,
+      gap: 5,
+    },
+    typeStoreBtnText: {
+      color: colors.blond,
+      fontSize: 14,
+      fontWeight: '600',
+      textAlign: 'center',
+      width: 140,
+      zIndex: 1,
+    },
 
-  detailFavorisRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-    flexWrap: 'wrap',
-    paddingHorizontal: 4,
-  },
-});
+    detailFavorisRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginVertical: 10,
+      flexWrap: 'wrap',
+      paddingHorizontal: 4,
+    },
+  });
+};
 
 export default Homescreen

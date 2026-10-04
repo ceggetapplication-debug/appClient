@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, TextInput, FlatList, Text, StyleSheet, SafeAreaView, TouchableOpacity, Keyboard, ActivityIndicator } from 'react-native';
+import { View, TextInput, FlatList, Text, StyleSheet, SafeAreaView, TouchableOpacity, Keyboard, ActivityIndicator, useColorScheme } from 'react-native';
 import { ProductNameKey } from '../calculation-logic/logiqueNoms';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 type LogiqueNomsModule = {
   loadTranslationsFromJson: () => Promise<void>;
@@ -29,6 +30,10 @@ const ProductSearchBar: React.FC = () => {
   const [currentDisplayLanguage, setCurrentDisplayLanguage] = useState<'fr' | 'kab'>('fr');
 
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
   const productInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -55,7 +60,7 @@ const ProductSearchBar: React.FC = () => {
 
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     if (isLogiqueNomsLoaded && !errorLoadingData) {
       const initializeData = async () => {
         setIsLoadingData(true);
@@ -165,12 +170,12 @@ const ProductSearchBar: React.FC = () => {
           style={styles.input}
           placeholder={t('lookingForProd')}
           value={productSearchText}
-          onChangeText={(text) => {
+          onChangeText={(text: string) => {
             isSelectingRef.current = false;
             setProductSearchText(text);
           }}
           clearButtonMode="while-editing"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.greyDes}
           onFocus={() => setShowProductSuggestions(true)}
           onBlur={() => setTimeout(() => setShowProductSuggestions(false), 200)}
           editable={true}
@@ -187,7 +192,7 @@ const ProductSearchBar: React.FC = () => {
       </View>
 
       {(isLoadingData || !isLogiqueNomsLoaded) && !errorLoadingData && (
-        <ActivityIndicator style={styles.globalLoadingIndicator} size="large" color="#0000ff" />
+        <ActivityIndicator style={styles.globalLoadingIndicator} size="large" color={colors.tint} />
       )}
       {errorLoadingData && (
         <Text style={styles.errorText}>{t('erreurchargement')}</Text>
@@ -197,66 +202,69 @@ const ProductSearchBar: React.FC = () => {
 };
 
 
-const styles = StyleSheet.create({
-  globalLoadingIndicator: {
-    marginTop: 20,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f2f5',
-    paddingTop: 50,
-  },
-  searchBarContainerSingle: {
-    marginHorizontal: 10,
-    marginBottom: 10,
-    zIndex: 1,
-  },
-  input: {
-    height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    fontSize: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    marginBottom: 5,
-  },
-  suggestionsList: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    maxHeight: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    position: 'absolute',
-    top: 55,
-    left: 0,
-    right: 0,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    zIndex: 10,
-  },
-  suggestionItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  suggestionText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    globalLoadingIndicator: {
+      marginTop: 20,
+    },
+    errorText: {
+      color: 'red',
+      textAlign: 'center',
+      marginTop: 10,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingTop: 50,
+    },
+    searchBarContainerSingle: {
+      marginHorizontal: 10,
+      marginBottom: 10,
+      zIndex: 1,
+    },
+    input: {
+      height: 50,
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingHorizontal: 20,
+      fontSize: 16,
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 3,
+      marginBottom: 5,
+    },
+    suggestionsList: {
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      maxHeight: 200,
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 3,
+      position: 'absolute',
+      top: 55,
+      left: 0,
+      right: 0,
+      borderWidth: 1,
+      borderColor: colors.accent,
+      zIndex: 10,
+    },
+    suggestionItem: {
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.accent,
+    },
+    suggestionText: {
+      fontSize: 16,
+      color: colors.textNormal,
+      fontWeight: '500',
+    },
+  });
+};
 
 export default ProductSearchBar;

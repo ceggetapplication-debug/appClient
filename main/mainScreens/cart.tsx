@@ -1,11 +1,10 @@
 import React, { useState, useEffect, memo, useRef } from 'react';
-
-import { View, Text, TouchableOpacity, Platform, SafeAreaView, Vibration } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, SafeAreaView, StyleSheet, useColorScheme } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Models } from 'react-native-appwrite';
 import { Product } from '../calculation-logic/cart-types';
-import { PremiumUtilisateur } from '../premiums';
+import { PremiumUtilisateur } from '../calculation-logic/premiums';
 import { databases, config, functions } from '../calculation-logic/appwriteConfig';
 import { calculateur, Store, LocalisationUser, ResultatCalcul, TypeLivraison, calculerLivraisonPourPanier, calculerTotalCommande, calculerCoutFinalAvecTempsReel, ResultatFinalDeLivraison, Driver, ConfigurationTarifs } from '../calculation-logic/calculLivraison';
 import { calculerCCPourCommande, getAvailableCredit, addEarnedCredit, returnUsedCredit } from '../calculation-logic/calcul-CC';
@@ -15,37 +14,14 @@ import ModalOrderQuantity from '../modals-others/modalOrderQuantity';
 import { ShoppingListTab } from '../modals-others/ShoppingListTab';
 import { DeliveryStatusTab } from '../modals-others/DeliveryStatusTab';
 import { CartProductsTab } from '../modals-others/CartProductsTab';
-import { useAppTranslation } from '../translations/data/translationCentralization';
-
-const CartItem = memo(({ product, isChecked, onToggleCheck, onPressItem }: { product: Product, isChecked: boolean, onToggleCheck: (productId: string, newValue: boolean) => void, onPressItem: (product: Product) => void }) => {
-  return (
-    <TouchableOpacity
-      style={[styles.cartItem, !isChecked && styles.disabledItem]}
-      activeOpacity={0.7}
-      onPress={() => onPressItem(product)}
-    >
-      <View style={styles.cartItemRow}>
-        <Text style={styles.itemQty}>
-          {product.uniteQuantite === 'g' || product.uniteQuantite === 'kg'
-            ? `${product.valeurQuantite} ${product.uniteQuantite}`
-            : product.valeurQuantite}
-        </Text>
-        <Text style={styles.itemName} numberOfLines={1}>{product.name}</Text>
-        <Text style={styles.itemPrice}>{(product.valeurQuantite ?? 0) * product.prix} DZD</Text>
-        <TouchableOpacity onPress={() => onToggleCheck(product.id, !isChecked)} style={styles.cartItemCheckbox}>
-          <Ionicons
-            name={isChecked ? "bag-check" : "bag-outline"}
-            size={24}
-            color={isChecked ? styles.checkboxCheckedColor.color : styles.checkboxUncheckedColor.color}
-          />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-});
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 const ShoppingCartScreen: React.FC = () => {
   const { t, currentLang } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
   const [activeSection, setActiveSection] = useState<string>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
@@ -207,7 +183,7 @@ const ShoppingCartScreen: React.FC = () => {
               if (distance <= 0.5 && !sirenePushedRef.current) {
                 sirenePushedRef.current = true;
                 try {
-                  functions.createExecution('ID_DE_TA_FONCTION', JSON.stringify({
+                  functions.createExecution(config.sireneFunctionId, JSON.stringify({
                     action: 'sirene',
                     clientGPS: userLocation!.localisation_gps,
                     driverGPS: loc,
@@ -247,10 +223,23 @@ const ShoppingCartScreen: React.FC = () => {
     }
   };
 
-  const handleCancelOrder = () => {
+  const handleCancelOrder = async () => {
     if (deliverySubscriptionRef.current) {
       deliverySubscriptionRef.current();
       deliverySubscriptionRef.current = null;
+    }
+
+    if (orderReference) {
+      try {
+        await databases.updateDocument(
+          config.databaseId,
+          config.deliveriesCollectionId,
+          orderReference,
+          { status: 'CANCELLED' }
+        );
+      } catch (err) {
+        console.error("Erreur annulation Appwrite:", err);
+      }
     }
 
     setIsOrderCancelled(true);
@@ -353,6 +342,33 @@ const ShoppingCartScreen: React.FC = () => {
     finalDeliveryCalculationResult,
   );
 
+  const CartItem = memo(({ product, isChecked, onToggleCheck, onPressItem }: { product: Product, isChecked: boolean, onToggleCheck: (productId: string, newValue: boolean) => void, onPressItem: (product: Product) => void }) => {
+    return (
+      <TouchableOpacity
+        style={[styles.cartItem, !isChecked && styles.disabledItem]}
+        activeOpacity={0.7}
+        onPress={() => onPressItem(product)}
+      >
+        <View style={styles.cartItemRow}>
+          <Text style={styles.itemQty}>
+            {product.uniteQuantite === 'g' || product.uniteQuantite === 'kg'
+              ? `${product.valeurQuantite} ${product.uniteQuantite}`
+              : product.valeurQuantite}
+          </Text>
+          <Text style={styles.itemName} numberOfLines={1}>{product.name}</Text>
+          <Text style={styles.itemPrice}>{(product.valeurQuantite ?? 0) * product.prix} DZD</Text>
+          <TouchableOpacity onPress={() => onToggleCheck(product.id, !isChecked)} style={styles.cartItemCheckbox}>
+            <Ionicons
+              name={isChecked ? "bag-check" : "bag-outline"}
+              size={24}
+              color={isChecked ? styles.checkboxCheckedColor.color : styles.checkboxUncheckedColor.color}
+            />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topNavBar}>
@@ -450,76 +466,79 @@ const ShoppingCartScreen: React.FC = () => {
   );
 };
 
-const styles = {
-  container: {
-    flex: 1,
-    backgroundColor: '#fafafa',
-  },
-  topNavBar: {
-    flexDirection: 'row',
-    backgroundColor: '#ececec',
-    borderBottomWidth: 2,
-    borderBottomColor: '#001524',
-    paddingTop: Platform.OS === 'ios' ? 0 : 20,
-  },
-  topNavButton: {
-    flex: 1,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  topNavButtonActive: {
-    borderBottomWidth: 4,
-    borderBottomColor: '#15616d',
-  },
-  topNavButtonText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  topNavButtonTextActive: {
-    color: '#15616d',
-    fontWeight: 'bold',
-  },
-  cartItem: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  cartItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  itemQty: {
-    fontWeight: 'bold',
-    color: '#15616d',
-  },
-  itemName: {
-    flex: 1,
-    fontSize: 16,
-    marginHorizontal: 10,
-  },
-  itemPrice: {
-    fontWeight: 'bold',
-    color: '#ff7d00',
-  },
-  disabledItem: {
-    opacity: 0.5,
-  },
-  cartItemCheckbox: {
-    padding: 5,
-  },
-  checkboxCheckedColor: {
-    color: '#ff7d00',
-  },
-  checkboxUncheckedColor: {
-    color: '#888',
-  },
-  checkboxTouchArea: {
-    padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    topNavBar: {
+      flexDirection: 'row',
+      backgroundColor: colors.tabIconDefault,
+      borderBottomWidth: 2,
+      borderBottomColor: colors.icon,
+      paddingTop: Platform.OS === 'ios' ? 0 : 20,
+    },
+    topNavButton: {
+      flex: 1,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    topNavButtonActive: {
+      borderBottomWidth: 4,
+      borderBottomColor: colors.green,
+    },
+    topNavButtonText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    topNavButtonTextActive: {
+      color: colors.green,
+      fontWeight: 'bold',
+    },
+    cartItem: {
+      backgroundColor: colors.surface,
+      padding: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.blond,
+    },
+    cartItemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    itemQty: {
+      fontWeight: 'bold',
+      color: colors.green,
+    },
+    itemName: {
+      flex: 1,
+      fontSize: 16,
+      marginHorizontal: 10,
+    },
+    itemPrice: {
+      fontWeight: 'bold',
+      color: colors.tint,
+    },
+    disabledItem: {
+      opacity: 0.5,
+    },
+    cartItemCheckbox: {
+      padding: 5,
+    },
+    checkboxCheckedColor: {
+      color: colors.tint,
+    },
+    checkboxUncheckedColor: {
+      color: colors.greyDes,
+    },
+    checkboxTouchArea: {
+      padding: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
 };
 
 export default ShoppingCartScreen;

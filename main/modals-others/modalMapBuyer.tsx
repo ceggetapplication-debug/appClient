@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Platform, Alert, ScrollView, TextInput, Image, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Platform, Alert, ScrollView, TextInput, Image, KeyboardAvoidingView, useColorScheme } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAppTranslation } from '@/app/translations/translationCentralization';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 import { account, databases, config, ID, Query, Models } from '../calculation-logic/appwriteConfig';
-import { uploadToR2, deleteFromR2, setPortePhoto } from '../calculation-logic/imagesLogic';
+import { uploadToR2, deleteFromR2, setPortePhoto, buildPortePhoto } from '../calculation-logic/imagesLogic';
 
 interface SavedPosition {
   id: string;
@@ -35,6 +36,10 @@ const INITIAL_ZOOM_DELTA_LON = 0.002;
 
 function modalMapBuyer() {
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const mapRef = useRef<MapView>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -100,11 +105,7 @@ function modalMapBuyer() {
         otherInfos: position.otherInfos,
       });
       if (tempImage && tempImage.startsWith('file')) {
-        await setPortePhoto(doc.$id, {
-          uri: tempImage,
-          name: 'door.jpg',
-          type: 'image/jpeg'
-        });
+        await setPortePhoto(doc.$id, tempImage);
       }
 
       setTempImage(null);
@@ -324,7 +325,7 @@ function modalMapBuyer() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoSectionLabel}>{t('domicileType')}</Text>
                   <TouchableOpacity onPress={() => { setIsEditingField('domicileType'); setEditValue(currentValues.domicileType); }}>
-                    <Ionicons name="pencil" size={20} color="#15616d" />
+                    <Ionicons name="pencil" size={20} color={colors.green} />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.infoSectionText}>{currentValues.domicileType}</Text>
@@ -347,7 +348,7 @@ function modalMapBuyer() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoSectionLabel}>{t('domicileNumber')}</Text>
                   <TouchableOpacity onPress={() => { setIsEditingField('domicileNumber'); setEditValue(currentValues.domicileNumber); }}>
-                    <Ionicons name="pencil" size={20} color="#15616d" />
+                    <Ionicons name="pencil" size={20} color={colors.green} />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.infoSectionText}>{currentValues.domicileNumber}</Text>
@@ -370,7 +371,7 @@ function modalMapBuyer() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoSectionLabel}>{t('frontDoorPic')}</Text>
                   <TouchableOpacity onPress={handlePickImage}>
-                    <Ionicons name="pencil" size={20} color="#15616d" />
+                    <Ionicons name="pencil" size={20} color={colors.green} />
                   </TouchableOpacity>
                 </View>
                 {tempImage ? (
@@ -396,7 +397,7 @@ function modalMapBuyer() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoSectionLabel}>{t('otherInfos')}</Text>
                   <TouchableOpacity onPress={() => { setIsEditingField('otherInfos'); setEditValue(currentValues.otherInfos); }}>
-                    <Ionicons name="pencil" size={20} color="#15616d" />
+                    <Ionicons name="pencil" size={20} color={colors.green} />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.infoSectionText}>{currentValues.otherInfos}</Text>
@@ -466,7 +467,7 @@ function modalMapBuyer() {
                         ]
                       );
                     }}>
-                      <Ionicons name="trash" size={20} color="#f06543" />
+                      <Ionicons name="trash" size={20} color={colors.globeu} />
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
@@ -476,7 +477,7 @@ function modalMapBuyer() {
               {!isPickingLocation && (
                 <>
                   <TouchableOpacity style={styles.addButton} onPress={startPickingLocation}>
-                    <Ionicons name="add" size={30} color="#fff" />
+                    <Ionicons name="add" size={30} color={colors.blond} />
                   </TouchableOpacity>
                 </>
               )}
@@ -542,159 +543,162 @@ function modalMapBuyer() {
 }
 
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    fontSize: 18,
-    textAlign: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 18,
-    textAlign: 'center',
-    padding: 20,
-    color: 'red',
-  },
-  map: {
-    width: Dimensions.get('window').width,
-    height: 350,
-    position: 'absolute',
-    top: 0,
-  },
-  actionButton: {
-    backgroundColor: '#001524',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  actionButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  cancelButton: {
-    backgroundColor: '#ff7d00',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  infoScrollView: {
-    position: 'absolute',
-    top: Dimensions.get('window').height * 0.5,
-    bottom: 0,
-    width: '100%',
-    backgroundColor: '#fff',
-  },
-  infoSection: {
-    marginBottom: 20,
-    paddingHorizontal: 15,
-    marginLeft: 0,
-  },
-  infoSectionLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#001524',
-    marginBottom: 5,
-    marginLeft: 5,
-  },
-  infoSectionLabelPoz: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#001524',
-    marginBottom: 5,
-    marginLeft: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: '#15616d',
-    size: '20%',
-  },
-  infoSectionText: {
-    fontSize: 14,
-    color: '#001524',
-    marginBottom: 10,
-    marginLeft: 5,
-  },
-  infoSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: 5,
-    borderBottomWidth: 2,
-    borderBottomColor: '#ff7d00',
-    paddingBottom: 0,
-    marginLeft: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  addButton: {
-    backgroundColor: '#15616d',
-    borderRadius: 50,
-    width: 50,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: 60,
-    marginTop: 5,
-  },
-  confirmBar: {
-    position: 'absolute',
-    bottom: 250,
-    left: 0,
-    right: 0,
-    padding: 30,
-    backgroundColor: '#ffecd1',
-  },
-  confirmBarButtons: {
-    flexDirection: 'row',
-    marginTop: 20,
-    gap: 20,
-  },
-  photoPlaceholder: {
-    width: 200,
-    height: 300,
-    backgroundColor: '#eee',
-    borderRadius: 8,
-    marginTop: 8,
-    alignSelf: 'center',
-  },
-  cancelButtonText: {
-    color: '#001524',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  editInput: {
-    borderWidth: 1,
-    borderColor: '#ff7d00',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    color: '#001524',
-    flex: 1,
-    height: 50,
-  },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    loadingText: {
+      fontSize: 18,
+      textAlign: 'center',
+      padding: 20,
+    },
+    errorText: {
+      fontSize: 18,
+      textAlign: 'center',
+      padding: 20,
+      color: 'red',
+    },
+    map: {
+      width: Dimensions.get('window').width,
+      height: 350,
+      position: 'absolute',
+      top: 0,
+    },
+    actionButton: {
+      backgroundColor: colors.blou,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 25,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    actionButtonText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    cancelButton: {
+      backgroundColor: colors.tint,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 25,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    infoScrollView: {
+      position: 'absolute',
+      top: Dimensions.get('window').height * 0.5,
+      bottom: 0,
+      width: '100%',
+      backgroundColor: colors.background,
+    },
+    infoSection: {
+      marginBottom: 20,
+      paddingHorizontal: 15,
+      marginLeft: 0,
+    },
+    infoSectionLabel: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 5,
+      marginLeft: 5,
+    },
+    infoSectionLabelPoz: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 5,
+      marginLeft: 10,
+      borderBottomWidth: 2,
+      borderBottomColor: colors.green,
+      size: '20%',
+    },
+    infoSectionText: {
+      fontSize: 14,
+      color: colors.text,
+      marginBottom: 10,
+      marginLeft: 5,
+    },
+    infoSectionTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginTop: 10,
+      marginBottom: 5,
+      borderBottomWidth: 2,
+      borderBottomColor: colors.tint,
+      paddingBottom: 0,
+      marginLeft: 8,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    addButton: {
+      backgroundColor: colors.green,
+      borderRadius: 50,
+      width: 50,
+      height: 50,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      marginBottom: 60,
+      marginTop: 5,
+    },
+    confirmBar: {
+      position: 'absolute',
+      bottom: 250,
+      left: 0,
+      right: 0,
+      padding: 30,
+      backgroundColor: colors.accent,
+    },
+    confirmBarButtons: {
+      flexDirection: 'row',
+      marginTop: 20,
+      gap: 20,
+    },
+    photoPlaceholder: {
+      width: 200,
+      height: 300,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      marginTop: 8,
+      alignSelf: 'center',
+    },
+    cancelButtonText: {
+      color: colors.text,
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    editInput: {
+      borderWidth: 1,
+      borderColor: colors.tint,
+      borderRadius: 8,
+      padding: 10,
+      fontSize: 14,
+      color: colors.text,
+      flex: 1,
+      height: 50,
+    },
+  });
+};
 
 export default modalMapBuyer;

@@ -21,6 +21,7 @@ export const config = {
     feedbackCollectionId: 'feedback_de_suppression',
     premiumCollectionId: 'premium_utilisateurs',
     invitationsCollectionId: 'invitations',
+    sireneFunctionId: 'notifications',
 } as const;
 
 export const r2Config = {

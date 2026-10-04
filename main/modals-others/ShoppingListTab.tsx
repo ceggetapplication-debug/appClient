@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, StyleSheet, useColorScheme } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CoursesListItem } from './cart-types';
-import { PremiumUtilisateur } from '../premiums';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { CoursesListItem } from '../calculation-logic/cart-types';
+import { PremiumUtilisateur } from '../calculation-logic/premiums';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
 
 interface Props {
   premiumStatus: PremiumUtilisateur;
@@ -12,6 +13,10 @@ interface Props {
 
 export const ShoppingListTab: React.FC<Props> = ({ premiumStatus }: Props) => {
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
   const [items, setItems] = useState<CoursesListItem[]>([]);
   const [text, setText] = useState('');
 
@@ -48,13 +53,12 @@ export const ShoppingListTab: React.FC<Props> = ({ premiumStatus }: Props) => {
 
   return (
     <View style={{ padding: 15 }}>
-      <Text style={styles.deliveryLabel}>{t('commandList.productList')}</Text>
-
+      <Text style={styles.deliveryLabel}>{t('listeCourses')}</Text>
       <View style={styles.addCourseInputWrapper}>
         <TextInput
           style={[styles.creditInput, styles.addCourseTextInput]}
           placeholder={t('addProduct')}
-          placeholderTextColor="#5e5e5e"
+          placeholderTextColor={colors.greyDes}
           value={text}
           onChangeText={setText}
           onSubmitEditing={addItem}
@@ -83,11 +87,11 @@ export const ShoppingListTab: React.FC<Props> = ({ premiumStatus }: Props) => {
                 style={item.checked ? styles.checkboxCheckedColor : styles.checkboxUncheckedColor}
               />
             </TouchableOpacity>
-            <Text style={[styles.coursesListItemText, item.checked && { textDecorationLine: 'line-through', color: '#dbdbdb' }]}>
+            <Text style={[styles.coursesListItemText, item.checked && { textDecorationLine: 'line-through', color: colors.textNormal }]}>
               {item.text}
             </Text>
             <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.checkboxTouchArea}>
-              <Ionicons name="trash-outline" size={24} color="#001524" />
+              <Ionicons name="trash-outline" size={24} color={colors.icon} />
             </TouchableOpacity>
           </View>
         ))}
@@ -96,59 +100,65 @@ export const ShoppingListTab: React.FC<Props> = ({ premiumStatus }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  deliveryLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#001524',
-    marginBottom: 12,
-  },
-  addCourseInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  creditInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#001524',
-    paddingVertical: 6,
-    fontSize: 15,
-    color: '#000',
-  },
-  addCourseTextInput: {
-    flex: 1,
-    marginRight: 10,
-  },
-  checkboxTouchArea: {
-    padding: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxCheckedColor: {
-    color: '#ff7d00',
-  },
-  checkboxUncheckedColor: {
-    color: '#888',
-  },
-  listContainer: {
-    maxHeight: '100%',
-  },
-  cartItemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ffecd1',
-  },
-  coursesListItemContainer: {
-    paddingHorizontal: 5,
-  },
-  coursesListItemText: {
-    flex: 1,
-    marginLeft: 15,
-    marginRight: 15,
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
-  },
-});
+
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    deliveryLabel: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 12,
+      marginTop: 10,
+
+    },
+    addCourseInputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    creditInput: {
+      borderBottomWidth: 1,
+      borderBottomColor: colors.textNormal,
+      paddingVertical: 6,
+      fontSize: 15,
+      color: colors.text,
+    },
+    addCourseTextInput: {
+      flex: 1,
+      marginRight: 10,
+    },
+    checkboxTouchArea: {
+      padding: 6,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkboxCheckedColor: {
+      color: colors.tint,
+    },
+    checkboxUncheckedColor: {
+      color: colors.greyDes,
+    },
+    listContainer: {
+      maxHeight: '100%',
+    },
+    cartItemContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.accent,
+    },
+    coursesListItemContainer: {
+      paddingHorizontal: 5,
+    },
+    coursesListItemText: {
+      flex: 1,
+      marginLeft: 15,
+      marginRight: 15,
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.textNormal,
+    },
+  });
+};

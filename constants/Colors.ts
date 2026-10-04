@@ -1,11 +1,9 @@
-import { StyleSheet } from 'react-native';
-
 export const PALETTE = {
   russet: '#78290f',
   gri: '#313630',
   orangeRed: '#ff7d00',
   platinum: '#e8e9eb',
-  timberwolf: '#e0dfd5',
+  timberwolf: 'rgba(255, 236, 209, 0.6)',
   onyx: '#001524',
   sandy: '#ffecd1',
   punk: '#FF9E80',
@@ -35,13 +33,14 @@ export const Colors = {
     noir: PALETTE.nwar,
     blond: PALETTE.acvhan,
     blou: PALETTE.bloug,
-    azuvagh: PALETTE.rouge
+    azuvagh: PALETTE.rouge,
+    globeu: PALETTE.russet
   },
   dark: {
     text: PALETTE.platinum,
     background: PALETTE.onyx,
     tint: PALETTE.orangeRed,
-    icon: PALETTE.onyx,
+    icon: PALETTE.platinum,
     tabIconDefault: '#687076',
     tabIconSelected: PALETTE.orangeRed,
     surface: '#3d4244',
@@ -53,6 +52,7 @@ export const Colors = {
     noir: PALETTE.nwar,
     blond: PALETTE.acvhan,
     blou: PALETTE.bloug,
-    azuvagh: PALETTE.rouge
+    azuvagh: PALETTE.rouge,
+    globeu: PALETTE.punk
   },
 };

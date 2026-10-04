@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert, useColorScheme } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
 import { Driver, TypeLivraison, ResultatFinalDeLivraison } from '../calculation-logic/calculLivraison';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
+import QRgenerator from '../modals-others/QRgenerator';
 
 interface Props {
   isOrderConfirmed: boolean;
@@ -24,8 +26,13 @@ interface Props {
 }
 
 export const DeliveryStatusTab: React.FC<Props> = (props: Props) => {
-  const { selectedRating, onRatingSelect, hasDeliveryArrived, isOrderConfirmed, isOrderCancelled, currentDriver, externalDriverDistance, confirmedDeliveryType, onCancelOrder, deliveryStatusMessage, finalDeliveryCalculationResult, confirmedTReel, confirmedTotalCommand, confirmedAppliedCreditAmount } = props;
+  const [isQRModalVisible, setIsQRModalVisible] = useState<boolean>(false);
+  const { selectedRating, onRatingSelect, hasDeliveryArrived, isOrderCancelled, isOrderConfirmed, currentDriver, externalDriverDistance, confirmedDeliveryType, onCancelOrder, deliveryStatusMessage, finalDeliveryCalculationResult, confirmedTReel, confirmedTotalCommand, confirmedAppliedCreditAmount, onOpenQR, isDriverAcceptedOrder } = props;
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
 
   const handleCancelOrder = () => {
     Alert.alert(
@@ -59,7 +66,7 @@ export const DeliveryStatusTab: React.FC<Props> = (props: Props) => {
       <Ionicons
         name={selectedRating >= value ? "heart" : "heart-outline"}
         size={36}
-        color={selectedRating >= value ? '#ff7d00' : '#ccc'}
+        color={selectedRating >= value ? colors.tint : colors.green}
         style={{ marginHorizontal: 5 }}
       />
     </TouchableOpacity>
@@ -133,6 +140,18 @@ export const DeliveryStatusTab: React.FC<Props> = (props: Props) => {
               </Text>
             </View>
 
+            <QRgenerator
+              orderData={{
+                id: currentDriver?.id || '',
+                orderReference: currentDriver?.id || '',
+                fullName: currentDriver?.name || 'Client',
+                address: '',
+                date: new Date().toISOString()
+              }}
+              externalDriverDistance={externalDriverDistance}
+              onSignatureCompleted={() => { }}
+            />
+
             {(confirmedDeliveryType === TypeLivraison.Rapid || confirmedDeliveryType === TypeLivraison.Normal) && (
               <>
                 <Text style={styles.deliveryLabel}>{t('noter_le_livreur')}</Text>
@@ -144,8 +163,7 @@ export const DeliveryStatusTab: React.FC<Props> = (props: Props) => {
           </>
         )}
       </View>
-
-      {isOrderConfirmed && !isOrderCancelled && !hasDeliveryArrived && (
+      {isOrderConfirmed && !isOrderCancelled && !hasDeliveryArrived && !isDriverAcceptedOrder && (
         <TouchableOpacity onPress={handleCancelOrder} style={styles.cancelOrderButton}>
           <Text style={styles.cancelOrderButtonText}>{t('cancel_order')}</Text>
         </TouchableOpacity>
@@ -154,68 +172,100 @@ export const DeliveryStatusTab: React.FC<Props> = (props: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
-  deliveryStatusMessage: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#001524',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  deliveryInfoLabels: {
-    backgroundColor: '#fbfbfb',
-    borderRadius: 5,
-    padding: 16,
-    elevation: 3,
-    marginBottom: 20,
-  },
-  deliveryInfoText: {
-    fontSize: 15,
-    color: '#001524',
-    marginBottom: 8,
-  },
-  deliveryInfoValue: {
-    fontWeight: 'bold',
-    color: '#ff7d00',
-  },
-  deliveryLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#001524',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  heartRatingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  finalTotalContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#ffecd1',
-    paddingTop: 12,
-    marginTop: 12,
-  },
-  totalText: {
-    fontSize: 16,
-    color: '#001524',
-  },
-  finalTotalValue: {
-    fontWeight: 'bold',
-    color: '#ff7d00',
-    fontSize: 18,
-  },
-  cancelOrderButton: {
-    alignSelf: 'center',
-    marginTop: 20,
-    padding: 10,
-  },
-  cancelOrderButtonText: {
-    color: '#001524',
-    textDecorationLine: 'underline',
-    fontSize: 14,
-  },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    container: {
+      padding: 20,
+    },
+    deliveryStatusMessage: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    deliveryInfoLabels: {
+      backgroundColor: colors.surface,
+      borderRadius: 5,
+      padding: 16,
+      elevation: 3,
+      marginBottom: 20,
+    },
+    deliveryInfoText: {
+      fontSize: 15,
+      color: colors.text,
+      marginBottom: 8,
+    },
+    deliveryInfoValue: {
+      fontWeight: 'bold',
+      color: colors.tint,
+    },
+    deliveryLabel: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    heartRatingContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 8,
+    },
+    finalTotalContainer: {
+      borderTopWidth: 1,
+      borderTopColor: colors.accent,
+      paddingTop: 12,
+      marginTop: 12,
+    },
+    totalText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    finalTotalValue: {
+      fontWeight: 'bold',
+      color: colors.tint,
+      fontSize: 18,
+    },
+    cancelOrderButton: {
+      alignSelf: 'center',
+      marginTop: 20,
+      padding: 10,
+    },
+    cancelOrderButtonText: {
+      color: colors.textNormal,
+      textDecorationLine: 'underline',
+      fontSize: 14,
+    },
+    qrButton: {
+      flexDirection: 'row',
+      backgroundColor: colors.text,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 15,
+      alignSelf: 'center',
+    },
+    qrButtonText: {
+      color: colors.surface,
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    qrModalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+    },
+    qrModalCloseButton: {
+      position: 'absolute',
+      top: 60,
+      right: 20,
+      zIndex: 1,
+      backgroundColor: colors.background,
+      borderRadius: 20,
+    },
+  });
+};

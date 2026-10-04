@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Alert, Image, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { buildProductPhoto } from '../calculation-logic/imagesLogic';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 const ModalProductInfos = ({
     visible,
@@ -33,6 +34,10 @@ const ModalProductInfos = ({
 }) => {
 
     const { t, currentLang } = useAppTranslation();
+    const colorScheme = useColorScheme();
+    const theme = colorScheme === 'dark' ? 'dark' : 'light';
+    const styles = getStyles(theme);
+    const colors = Colors[theme];
     const [isFavorite, setIsFavorite] = useState(initialFavorite);
 
     if (!product) return null;
@@ -79,14 +84,14 @@ const ModalProductInfos = ({
             <View style={styles.overlay}>
                 <View style={styles.topBar}>
                     <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-                        <Ionicons name="chevron-down" size={32} color="#001524" />
+                        <Ionicons name="chevron-left" size={24} color={colors.icon} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.favoriteBtn} onPress={toggleFavorite}>
                         <Ionicons
                             name={isFavorite ? "heart" : "heart-outline"}
-                            size={32}
-                            color={isFavorite ? "#ff7d00" : "#001524"}
+                            size={26}
+                            color={isFavorite ? colors.tint : colors.tint}
                         />
                     </TouchableOpacity>
                 </View>
@@ -151,129 +156,119 @@ const ModalProductInfos = ({
     );
 };
 
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        justifyContent: 'flex-end',
-    },
-    topBar: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 25,
-        paddingBottom: 0,
-        alignItems: 'center',
-        zIndex: 10,
-    },
-    closeBtn: {
-        width: 54,
-        height: 54,
-        borderRadius: 27,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-    },
-    favoriteBtn: {
-        width: 54,
-        height: 54,
-        borderRadius: 27,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-    },
-    content: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 45,
-        borderTopRightRadius: 45,
-        paddingTop: 35,
-        paddingHorizontal: 30,
-        paddingBottom: 40,
-        maxHeight: '90%',
-    },
-    scrollContainer: {
-        paddingBottom: 30,
-    },
-    mainTitle: {
-        fontSize: 18,
-        fontWeight: '900',
-        color: '#15616d',
-        marginBottom: 25,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginBottom: 15,
-        alignItems: 'center',
-    },
-    label: {
-        fontSize: 15,
-        fontWeight: '800',
-        color: '#001524',
-        marginRight: 8,
-    },
-    value: {
-        fontSize: 15,
-        fontWeight: '500',
-        color: '#000000',
-    },
-    priceValue: {
-        fontSize: 18,
-        fontWeight: '900',
-        color: '#ff7d00',
-    },
-    storeValue: {
-        fontSize: 15,
-        fontWeight: '800',
-        color: '#000000',
-    },
-    detailsContainer: {
-        marginBottom: 20,
-    },
-    description: {
-        fontSize: 15,
-        color: '#000000',
-        lineHeight: 22,
-        marginTop: 5,
-    },
-    commanderBtn: {
-        backgroundColor: '#ff7d00',
-        height: 50,
-        borderRadius: 30,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 10,
-        shadowColor: '#ff7d00',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 8,
-    },
-    commanderText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        letterSpacing: 2,
-    },
-    productImage: {
-        width: '100%',
-        height: 200,
-        borderRadius: 20,
-        marginBottom: 25,
-        resizeMode: 'cover',
-    },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+    const colors = Colors[theme];
+    return StyleSheet.create({
+        overlay: {
+            flex: 1,
+            backgroundColor: colors.background,
+            justifyContent: 'flex-end',
+        },
+        topBar: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingHorizontal: 25,
+            paddingBottom: 0,
+            alignItems: 'center',
+            zIndex: 10,
+        },
+        closeBtn: {
+            width: 54,
+            height: 54,
+            borderRadius: 27,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        favoriteBtn: {
+            width: 54,
+            height: 54,
+            borderRadius: 27,
+            backgroundColor: colors.background,
+            alignItems: 'center',
+            justifyContent: 'center',
+            elevation: 10,
+            shadowColor: colors.noir,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+        },
+        content: {
+            backgroundColor: colors.background,
+            borderTopLeftRadius: 45,
+            borderTopRightRadius: 45,
+            paddingTop: 35,
+            paddingHorizontal: 30,
+            paddingBottom: 40,
+            maxHeight: '90%',
+        },
+        scrollContainer: {
+            paddingBottom: 30,
+        },
+        mainTitle: {
+            fontSize: 18,
+            fontWeight: '800',
+            color: colors.green,
+            marginBottom: 25,
+        },
+        infoRow: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            marginBottom: 15,
+            alignItems: 'center',
+        },
+        label: {
+            fontSize: 15,
+            fontWeight: '800',
+            color: colors.icon,
+            marginRight: 8,
+        },
+        value: {
+            fontSize: 15,
+            fontWeight: '500',
+            color: colors.textNormal,
+        },
+        priceValue: {
+            fontSize: 18,
+            fontWeight: '900',
+            color: colors.tint,
+        },
+        storeValue: {
+            fontSize: 15,
+            fontWeight: '800',
+            color: colors.text,
+        },
+        detailsContainer: {
+            marginBottom: 20,
+        },
+        description: {
+            fontSize: 15,
+            color: colors.greyDes,
+            lineHeight: 22,
+            marginTop: 5,
+        },
+        commanderBtn: {
+            backgroundColor: colors.tint,
+            height: 50,
+            borderRadius: 30,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: 10,
+            width: 'auto',
+            paddingHorizontal: 15,
+        },
+        commanderText: {
+            color: colors.text,
+            fontSize: 18,
+            fontWeight: '800',
+        },
+        productImage: {
+            width: '100%',
+            height: 200,
+            borderRadius: 20,
+            marginBottom: 25,
+            resizeMode: 'cover',
+        },
+    });
+};
 
 export default ModalProductInfos;

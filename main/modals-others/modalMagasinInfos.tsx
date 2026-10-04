@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { buildStorePhoto, buildSharedPhoto, SharedPhotoUrls, StorePhoto } from '../calculation-logic/imagesLogic';
 import { databases, config } from '../calculation-logic/appwriteConfig';
-import { useAppTranslation } from '../translations/data/translationCentralization';
-
-const BORDER_COLOR = '#001524';
+import { Colors } from '@/constants/Colors';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 export interface Adresse {
   id: number;
@@ -22,6 +21,8 @@ export interface Adresse {
 export interface Product {
   id: string;
   name: string;
+  store: string;
+  address: string;
   descriptionFr: string;
   descriptionKab: string;
   marque?: string;
@@ -103,7 +104,7 @@ interface Props {
   setSelectedGroupe: (g: Group | null) => void;
   setSelectedTypeStore: (t: StoreType | null) => void;
   setSelectedStore: (m: Store | null) => void;
-  setVisiblecategories: (c: Category[]) => void;
+  setVisibleCategories: (c: Category[]) => void;
   setSelectedCategory: (c: Category | null) => void;
   setOpenProductType: (id: string | null) => void;
 }
@@ -127,22 +128,41 @@ export default function StoreDetailsScreen({
   const [loading, setLoading] = useState(false);
   const [favoris, setFavoris] = useState<string[]>([]);
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
 
   useEffect(() => {
-    AsyncStorage.getItem('favoris').then((data: string | null) => {
-      if (data) setFavoris(JSON.parse(data));
-    });
-  }, []);
+    if (storeId) {
+      databases.getDocument(config.databaseId, config.storesCollectionId, storeId)
+        .then((doc: any) => {
+          if (doc.favoris) setFavoris(doc.favoris);
+        })
+        .catch(() => { });
+    }
+  }, [storeId]);
 
-  const toggleFavori = (id: string) => {
-    setFavoris((prev: string[]) => {
-      const already = prev.includes(id);
-      const next = already ? prev.filter(f => f !== id) : [...prev, id];
-      AsyncStorage.setItem('favoris', JSON.stringify(next));
-      return next;
-    });
+  const toggleFavori = async (id: string) => {
+    const isFav = favoris.includes(id);
+    const next = isFav ? favoris.filter((f: string) => f !== id) : [...favoris, id];
+    setFavoris(next);
+
+    if (store) {
+      const newLikes = isFav ? Math.max(0, (store.likes || 0) - 1) : (store.likes || 0) + 1;
+      setStore({ ...store, likes: newLikes });
+      try {
+        await databases.updateDocument(
+          config.databaseId,
+          config.storesCollectionId || 'stores',
+          id,
+          { likes: newLikes }
+        );
+      } catch (err) {
+        console.error("Erreur mise à jour likes Appwrite:", err);
+      }
+    }
   };
-
 
   useEffect(() => {
     if (!visible) return;
@@ -174,7 +194,7 @@ export default function StoreDetailsScreen({
   return (
     <View style={styles.hierarchyScreen}>
       <View style={styles.hierarchyHeader}>
-        <View style={styles.detailFavorisRow}>
+        <View style={styles.storeHeaderRow}>
           <TouchableOpacity onPress={() => {
             if (!store) return;
             let targetGroupe = group;
@@ -208,14 +228,14 @@ export default function StoreDetailsScreen({
               onClose();
             }
           }}>
-            <Ionicons name="chevron-back" size={30} color={BORDER_COLOR} />
+            <Ionicons name="chevron-back" size={28} color={colors.icon} />
           </TouchableOpacity>
-          <Text style={styles.detailStoreNom}>{store?.name}</Text>
+          <Text style={styles.detailStoreNom} numberOfLines={1}>{store?.name}</Text>
         </View>
       </View>
       {loading ? (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color="#15616d" />
+          <ActivityIndicator size="large" color={colors.errorText} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.buttonList}>
@@ -228,17 +248,19 @@ export default function StoreDetailsScreen({
               <Ionicons
                 name={store?.id && (favoris ?? []).includes(store.id) ? 'heart' : 'heart-outline'}
                 size={32}
-                color={store?.id && (favoris ?? []).includes(store.id) ? 'red' : BORDER_COLOR}
+                color={store?.id && (favoris ?? []).includes(store.id) ? 'red' : colors.errorText}
               />
             </TouchableOpacity>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Text style={styles.detailLabel}>{t('magAimePar')} </Text>
-            <Text style={styles.detailTextGris}>{store?.likes} </Text>
-            <Text style={styles.detailLabel}>{t('nMedden')}</Text>
-          </View>
-
+          <Text style={styles.detailLabel}>
+            {t('magAimePar', { count: '{{count}}' }).split('{{count}}').map((part, index) => (
+              <React.Fragment key={index}>
+                {part}
+                {index === 0 && <Text style={{ color: colors.tint, fontWeight: 'bold' }}>{store?.likes ?? 0}</Text>}
+              </React.Fragment>
+            ))}
+          </Text>
           <Text style={styles.detailLabel}>{t('commandList.address')}</Text>
           <Text style={styles.detailText}>{store?.adresseDetails?.adresse ?? t('ordersByStore.storeLocationUnavailable')}</Text>
 
@@ -289,7 +311,7 @@ export default function StoreDetailsScreen({
                 }
               }
             }}>
-              <Ionicons name="open-outline" size={28} color={BORDER_COLOR} />
+              <Ionicons name="open-outline" size={28} color={colors.icon} />
             </TouchableOpacity>
           </View>
 
@@ -353,82 +375,97 @@ export default function StoreDetailsScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  hierarchyScreen: {
-    flex: 1,
-    backgroundColor: '#fafafa',
-    margin: 0,
-    padding: 0,
-  },
-  hierarchyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    marginTop: 35,
-    gap: 12,
-  },
-  buttonList: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  detailStoreNom: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    color: '#15616d',
-    marginBottom: 12,
-    marginLeft: 10,
-  },
-  detailPhotoCover: {
-    width: '100%',
-    height: 150,
-    borderRadius: 16,
-    marginBottom: 12,
-  },
-  detailFavorisRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-    flexWrap: 'wrap',
-    paddingHorizontal: 4,
-  },
-  detailLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    color: BORDER_COLOR,
-    marginBottom: 4,
-    marginTop: 10,
-    marginLeft: 0,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#000',
-    marginBottom: 4,
-    paddingHorizontal: 4,
-    marginLeft: -5,
-  },
-  detailTextGris: {
-    fontSize: 14,
-    color: '#595959',
-    marginBottom: 4,
-    paddingHorizontal: 4,
-  },
-  storeDetailsPhotosScroll: {
-    gap: 12,
-    paddingHorizontal: 16,
-  },
-  detailPhotoShared: {
-    width: 280,
-    height: 280,
-    borderRadius: 12,
-    marginTop: 10,
-  },
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    loader: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    hierarchyScreen: {
+      flex: 1,
+      backgroundColor: colors.background,
+      margin: 0,
+      padding: 0,
+    },
+    hierarchyHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      marginBottom: 20,
+      marginTop: 35,
+      gap: 12,
+    },
+    buttonList: {
+      paddingHorizontal: 16,
+      paddingBottom: 40,
+    },
+    storeHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: 10,
+      paddingHorizontal: 10,
+      marginVertical: 10,
+    },
+    chevronButton: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingRight: 4,
+    },
+    detailStoreNom: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+      color: colors.green,
+      textAlign: 'left',
+    },
+    detailPhotoCover: {
+      width: '100%',
+      height: 150,
+      borderRadius: 16,
+      marginBottom: 12,
+    },
+    detailFavorisRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginVertical: 10,
+      flexWrap: 'wrap',
+      paddingHorizontal: 4,
+    },
+    detailLabel: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      fontStyle: 'italic',
+      color: colors.text,
+      marginBottom: 4,
+      marginTop: 10,
+      marginLeft: 0,
+    },
+    detailText: {
+      fontSize: 14,
+      color: colors.textNormal,
+      marginBottom: 4,
+      paddingHorizontal: 4,
+      marginLeft: -5,
+    },
+    detailTextGris: {
+      fontSize: 14,
+      color: colors.greyDes,
+      marginBottom: 4,
+      paddingHorizontal: 4,
+    },
+    storeDetailsPhotosScroll: {
+      gap: 12,
+      paddingHorizontal: 16,
+    },
+    detailPhotoShared: {
+      width: 280,
+      height: 280,
+      borderRadius: 12,
+      marginTop: 10,
+    },
+  });
+};

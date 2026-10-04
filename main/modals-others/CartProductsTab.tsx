@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
 import { Product, CartProductsTabProps } from './cart-types';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
 import { TypeLivraison } from '../calculation-logic/calculLivraison';
+import { Colors } from '@/constants/Colors';
 
 type Props = CartProductsTabProps & {
   renderProductItem: (p: Product) => React.ReactNode;
@@ -11,6 +12,9 @@ type Props = CartProductsTabProps & {
 export const CartProductsTab: React.FC<Props> = (props: Props) => {
   const { t } = useAppTranslation();
   const { products, totalCommand, MC, CC, fraisAppli, finalTotal, selectedDeliveryType, onDeliveryTypeSelect, onConfirmOrder, renderProductItem } = props;
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
 
   return (
     <ScrollView style={styles.container}>
@@ -57,88 +61,95 @@ export const CartProductsTab: React.FC<Props> = (props: Props) => {
         </View>
 
         <TouchableOpacity style={styles.orderButton} onPress={onConfirmOrder}>
-          <Text style={styles.orderButtonText}>{t('confirmaLiv')}</Text>
+          <Text style={styles.orderButtonText}>{t('general.confirm')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15
-  },
-  section: {
-    marginBottom: 25
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#001524'
-  },
-  deliveryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  typeButton: {
-    flex: 1,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 4
-  },
-  typeButtonSelected: {
-    backgroundColor: '#ff7d00',
-    borderColor: '#ff7d00'
-  },
-  textDefault: {
-    color: '#666'
-  },
-  textSelected: {
-    color: '#fff',
-    fontWeight: 'bold'
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    elevation: 5,
-    marginBottom: 30
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 15,
-    marginTop: 5
-  },
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: 'bold'
-  },
-  totalValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#ff7d00'
-  },
-  orderButton: {
-    backgroundColor: '#001524',
-    padding: 18,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20
-  },
-  orderButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold'
-  }
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 15
+    },
+    section: {
+      marginBottom: 25
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 15,
+      color: colors.text,
+    },
+    deliveryContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between'
+    },
+    typeButton: {
+      flex: 1,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: colors.accent,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginHorizontal: 4
+    },
+    typeButtonSelected: {
+      backgroundColor: colors.tint,
+      borderColor: colors.tint,
+    },
+    textDefault: {
+      color: colors.textNormal,
+    },
+    textSelected: {
+      color: colors.blond,
+      fontWeight: 'bold',
+    },
+    summaryCard: {
+      backgroundColor: colors.background,
+      borderRadius: 15,
+      padding: 20,
+      elevation: 5,
+      marginBottom: 30
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10
+    },
+    totalRow: {
+      borderTopWidth: 1,
+      borderTopColor: colors.accent,
+      paddingTop: 15,
+      marginTop: 5
+    },
+    totalLabel: {
+      fontSize: 18,
+      fontWeight: 'bold'
+    },
+    totalValue: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: colors.tint,
+    },
+    orderButton: {
+      backgroundColor: colors.icon,
+      padding: 18,
+      paddingHorizontal: 25,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      marginTop: 20,
+      width: 'auto',
+    },
+    orderButtonText: {
+      color: colors.tint,
+      fontSize: 16,
+      fontWeight: 'bold'
+    }
+  });
+};

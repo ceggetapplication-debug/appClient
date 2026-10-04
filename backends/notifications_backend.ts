@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Client, Databases } from 'node-appwrite';
-import { calculateur, LocalisationUser, Driver } from '../app/main/calculation-logic/calculLivraison';
+import { calculateur, LocalisationUser, Driver } from '@/main/calculation-logic/calculLivraison';
 
 declare var process: {
   env: {
@@ -39,7 +39,6 @@ export default async ({ req, res }: AppwriteContext) => {
       contents: { "en": content, "fr": content },
     };
 
-    // Si c'est la sirène, on ajoute les priorités et sons
     if (data.action === 'sirene') {
       payload.priority = 10;
       payload.android_channel_id = "urgence_livraison";
@@ -60,9 +59,6 @@ export default async ({ req, res }: AppwriteContext) => {
   };
 
   switch (data.action) {
-    // ==========================================
-    // 1. LA SIRÈNE 500M (Urgence Livraison)
-    // ==========================================
     case 'sirene':
       const distance = calculateur.dis(
         { localisation_gps: data.clientGPS } as LocalisationUser,
@@ -93,10 +89,6 @@ export default async ({ req, res }: AppwriteContext) => {
         { type: "PROMO", productId: data.productId }
       );
       return res.json({ success: true, message: "Notification promo envoyée" });
-
-    // ==========================================
-    // 4. L'AVALANCHE EMAILS (Confirmation)
-    // ==========================================
     case 'avalanche':
       const { emailClient, orderReference, htmlContent } = data;
 

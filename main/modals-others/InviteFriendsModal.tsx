@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Alert, Share, Linking } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Alert, Share, Linking, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { useAppTranslation } from '../translations/data/translationCentralization';
+import { useAppTranslation } from '@/translations/data/translationCentralization';
+import { Colors } from '@/constants/Colors';
 
 interface InviteOption {
   id: string;
@@ -45,7 +46,7 @@ async function generateShareLink(
   userId: string,
   targetPlatform: string
 ): Promise<string> {
-  return `https://votre-app.com/invite?invitedBy=${userId}&source=${targetPlatform}`;
+  return `cegget://invite?invitedBy=${userId}&source=${targetPlatform}`;
 }
 
 function logAppWriteAnalyticsEvent(eventName: string, params: Record<string, any>): void {
@@ -64,10 +65,13 @@ const InviteFriendsModal = ({
   isVisible,
   onClose,
   currentUserId,
-  successfulReferralsCount,
 }: InviteFriendsModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useAppTranslation();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? 'dark' : 'light';
+  const styles = getStyles(theme);
+  const colors = Colors[theme];
 
   const handleInvite = async (actionType: 'whatsapp_direct' | 'messenger_direct' | 'system_share') => {
     setIsLoading(true);
@@ -143,7 +147,7 @@ const InviteFriendsModal = ({
         <View style={styles.modalView}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={onClose} style={styles.backButton} disabled={isLoading}>
-              <Icon name="chevron-left" size={24} color="#333" />
+              <Icon name="chevron-left" size={24} color={colors.icon} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>{t(inviteModalHeader.titleKey)}</Text>
             <View style={styles.backButtonPlaceholder} />
@@ -157,7 +161,7 @@ const InviteFriendsModal = ({
                 onPress={() => handleInvite(option.actionType)}
                 disabled={isLoading}
               >
-                <Icon name={option.iconName} size={24} color="#ff7d00" style={styles.icon} />
+                <Icon name={option.iconName} size={24} color={colors.tint} style={styles.icon} />
                 <Text style={styles.inviteOptionText}>{t(option.labelKey)}</Text>
               </TouchableOpacity>
             ))}
@@ -170,95 +174,98 @@ const InviteFriendsModal = ({
   );
 };
 
-const styles = StyleSheet.create({
-  rewardStatusContainer: {
-    marginTop: 10,
-    padding: 10,
-    marginBottom: 30,
-    backgroundColor: 'transparent',
-    width: '100%',
-    alignItems: 'center',
-  },
-  rewardStatusText: {
-    fontSize: 15,
-    textAlign: 'center',
-    color: '#001524',
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 5,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    width: '90%',
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 0,
-  },
-  backButton: {
-    padding: 5,
-    marginTop: -8,
-    marginBottom: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: -8,
-    marginBottom: 10,
-  },
-  backButtonPlaceholder: {
-    width: 20,
-    height: 20,
-  },
-  scrollViewContent: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  inviteOptionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8e9eb',
-    borderColor: '#15616d',
-    borderWidth: 2,
-    padding: 15,
-    borderRadius: 5,
-    width: 280,
-    marginBottom: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  icon: {
-    marginRight: 15,
-  },
-  inviteOptionText: {
-    fontSize: 16,
-    color: '#000',
-  },
-  loadingText: {
-    marginTop: -10,
-    textAlign: 'center',
-    color: '#666',
-  }
-});
+const getStyles = (theme: 'light' | 'dark') => {
+  const colors = Colors[theme];
+  return StyleSheet.create({
+    rewardStatusContainer: {
+      marginTop: 10,
+      padding: 10,
+      marginBottom: 30,
+      backgroundColor: 'transparent',
+      width: '100%',
+      alignItems: 'center',
+    },
+    rewardStatusText: {
+      fontSize: 15,
+      textAlign: 'center',
+      color: colors.text,
+    },
+    centeredView: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: colors.background,
+      borderRadius: 5,
+      padding: 20,
+      alignItems: 'center',
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+      width: '90%',
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginBottom: 0,
+    },
+    backButton: {
+      padding: 5,
+      marginTop: -8,
+      marginBottom: 10,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginTop: -8,
+      marginBottom: 10,
+    },
+    backButtonPlaceholder: {
+      width: 20,
+      height: 20,
+    },
+    scrollViewContent: {
+      width: '100%',
+      alignItems: 'center',
+    },
+    inviteOptionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderColor: colors.green,
+      borderWidth: 2,
+      padding: 15,
+      borderRadius: 5,
+      width: 280,
+      marginBottom: 3,
+      shadowColor: colors.noir,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 1,
+      elevation: 2,
+    },
+    icon: {
+      marginRight: 15,
+    },
+    inviteOptionText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    loadingText: {
+      marginTop: -10,
+      textAlign: 'center',
+      color: colors.greyDes,
+    }
+  });
+};
 
 export default InviteFriendsModal;
