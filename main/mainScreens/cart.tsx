@@ -13,6 +13,7 @@ import PremiumUtiliOffersModal from '../modals-others/modalPremiums';
 import ModalOrderQuantity from '../modals-others/modalOrderQuantity';
 import { ShoppingListTab } from '../modals-others/ShoppingListTab';
 import { DeliveryStatusTab } from '../modals-others/DeliveryStatusTab';
+import { buildOrderReference } from '../calculation-logic/refereceCMD';
 import { CartProductsTab } from '../modals-others/CartProductsTab';
 import { Colors } from '@/constants/Colors';
 import { useAppTranslation } from '@/translations/data/translationCentralization';
@@ -131,7 +132,11 @@ const ShoppingCartScreen: React.FC = () => {
       setUserCreditBalance(getAvailableCredit(userPremiumStatus));
     }
 
-    const newOrderRef = `CMD-${Date.now()}`;
+    const newOrderRef = buildOrderReference(
+      userLocation?.fullName || '',
+      userLocation?.username || '',
+      userOrderCount
+    );
     const currentTotal = totalCommand;
     const currentAppliedCredit = appliedCreditAmount;
     const currentDeliveryType = selectedDeliveryType;
