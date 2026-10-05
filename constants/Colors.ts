@@ -1,6 +1,5 @@
 export const PALETTE = {
   russet: '#78290f',
-  gri: '#313630',
   orangeRed: '#ff7d00',
   platinum: '#e8e9eb',
   timberwolf: 'rgba(255, 236, 209, 0.6)',
