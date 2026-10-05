@@ -263,7 +263,7 @@ const getStyles = (theme: 'light' | 'dark') => {
       borderRadius: 5,
       marginBottom: 16,
       alignSelf: 'center',
-      width: 'fit-content',
+      width: 'auto',
     },
     statusInvalid: {
       flexDirection: 'row',
@@ -275,7 +275,7 @@ const getStyles = (theme: 'light' | 'dark') => {
       borderRadius: 5,
       marginBottom: 16,
       alignSelf: 'center',
-      width: 'fit-content',
+      width: 'auto',
     },
     statusTextValid: {
       fontSize: 15,
