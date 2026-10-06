@@ -75,6 +75,8 @@ export function sizes() {
     AVATAR: 60,
     GROUP: Math.min(220, Math.round(W * 0.5)),
     LOGO: 70,
+    CATEGORY_W: 40,
+    CATEGORY_H: 40,
   };
 }
 
@@ -222,7 +224,6 @@ export function getAppLogo(hasSpace: boolean) {
   return {
     source: hasSpace
       ? require('../../../assets/images/logo6.5.png')
-      : require('../../../assets/images/logi.png'),
       : require('../../../assets/images/logAppKMRS.png'),
     width: hasSpace ? s.PROFIL_PIC : s.LOGO,
     height: hasSpace ? s.PROFIL_PIC : s.LOGO,
