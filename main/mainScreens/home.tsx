@@ -1017,9 +1017,9 @@ const getStyles = (theme: 'light' | 'dark') => {
       gap: 6,
     },
     categoryChipImage: {
-      width: 52,
-      height: 52,
-      resizeMode: 'cover',
+      width: ImagesLogic.sizes().CATEGORY_W,
+      height: ImagesLogic.sizes().CATEGORY_H,
+      resizeMode: 'contain',
     },
     categoryChipText: {
       fontSize: 13,

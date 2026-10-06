@@ -223,6 +223,7 @@ export function getAppLogo(hasSpace: boolean) {
     source: hasSpace
       ? require('../../../assets/images/logo6.5.png')
       : require('../../../assets/images/logi.png'),
+      : require('../../../assets/images/logAppKMRS.png'),
     width: hasSpace ? s.PROFIL_PIC : s.LOGO,
     height: hasSpace ? s.PROFIL_PIC : s.LOGO,
   };
