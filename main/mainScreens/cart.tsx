@@ -141,6 +141,9 @@ const ShoppingCartScreen: React.FC = () => {
     const currentAppliedCredit = appliedCreditAmount;
     const currentDeliveryType = selectedDeliveryType;
 
+    if (calculatedDistance > 20 && currentDeliveryType !== TypeLivraison.Pickup) {
+      return;
+    }
     setOrderReference(newOrderRef);
     setConfirmedTotalCommand(currentTotal);
     setConfirmedAppliedCreditAmount(currentAppliedCredit);
@@ -398,6 +401,7 @@ const ShoppingCartScreen: React.FC = () => {
             userLocation={userLocation}
             deliveryCost={deliveryCost}
             totalCommand={totalCommand}
+            calculatedDistance={calculatedDistance}
             calculationResult={calculationResult}
             selectedDeliveryType={selectedDeliveryType}
             onDeliveryTypeSelect={handleDeliveryTypeSelect}

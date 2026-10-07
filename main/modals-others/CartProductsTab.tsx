@@ -97,6 +97,22 @@ const getStyles = (theme: 'light' | 'dark') => {
       alignItems: 'center',
       marginHorizontal: 4
     },
+    typeButtonDisabled: {
+      backgroundColor: colors.surface,
+      borderColor: colors.surface,
+      opacity: 0.4,
+    },
+    textDisabled: {
+      color: colors.greyDes || '#a0a0a0',
+      fontSize: 13,
+    },
+    outOfZoneWarningText: {
+      color: 'red',
+      fontSize: 13,
+      fontWeight: '600',
+      marginTop: 10,
+      textAlign: 'center',
+    },
     typeButtonSelected: {
       backgroundColor: colors.tint,
       borderColor: colors.tint,

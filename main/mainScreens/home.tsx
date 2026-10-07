@@ -60,8 +60,8 @@ const CategoryBar = React.memo(({ categories, selectedId, onSelect }: {
   const styles = getStyles(theme);
 
   return (
-    <View style={styles.categoryChips}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryChipsContent}>
+    <View style={styles.categoryBarContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryBarContent}>
         {categories.filter(Category =>
           (Category.products && Category.products.length > 0) ||
           (Category.productTypes && Category.productTypes.length > 0)
@@ -71,17 +71,15 @@ const CategoryBar = React.memo(({ categories, selectedId, onSelect }: {
             <TouchableOpacity
               key={Category.id}
               onPress={() => onSelect(Category)}
-              style={styles.categoryChipItem}
+              style={[styles.categoryCard, isActive && styles.selectedCategoryCard]}
+              activeOpacity={0.8}
             >
-              <View style={styles.categoryChipImageWrapper}>
-                <Image
-                  source={ImagesLogic.getCategoryPhoto(Category.id)}
-                  style={styles.categoryChipImage}
-                  fadeDuration={0}
-                />
-                <View style={[styles.categoryChipBorder, { borderColor: isActive ? colors.green : 'transparent' }]} />
-              </View>
-              <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
+              <Image
+                source={ImagesLogic.getCategoryPhoto(Category.id)}
+                style={styles.categoryIconImage}
+                resizeMode="contain"
+              />
+              <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]} numberOfLines={1}>
                 {Category.name}
               </Text>
             </TouchableOpacity>
@@ -1002,41 +1000,45 @@ const getStyles = (theme: 'light' | 'dark') => {
       paddingHorizontal: 16,
       paddingBottom: 40,
     },
-    categoryChips: {
-      marginBottom: 20,
+    categoryBarContainer: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingVertical: 6,
+      paddingHorizontal: 4,
+      marginVertical: 10,
     },
-    categoryChipsContent: {
-      paddingLeft: 12,
-      paddingRight: 16,
-      gap: 20,
-      flexDirection: 'row',
+    categoryBarContent: {
       alignItems: 'center',
     },
-    categoryChipItem: {
+    categoryCard: {
       alignItems: 'center',
-      gap: 6,
+      justifyContent: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      backgroundColor: 'transparent',
+      marginRight: 1,
+      borderWidth: 1.5,
+      borderColor: 'transparent',
     },
-    categoryChipImage: {
+    selectedCategoryCard: {
+      backgroundColor: colors.background,
+      borderColor: colors.green,
+    },
+    categoryIconImage: {
       width: ImagesLogic.sizes().CATEGORY_W,
       height: ImagesLogic.sizes().CATEGORY_H,
-      resizeMode: 'contain',
+      marginBottom: 4,
     },
     categoryChipText: {
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '600',
       color: colors.icon,
       textAlign: 'center',
-      maxWidth: 200,
     },
     categoryChipTextActive: {
       color: colors.green,
-      fontWeight: '800',
-    },
-    categoryChipImageWrapper: {
-      width: 60,
-      height: 60,
-      borderRadius: 8,
-      overflow: 'hidden',
+      fontWeight: 'bold',
     },
     productTypeBtn: {
       flexDirection: 'row',

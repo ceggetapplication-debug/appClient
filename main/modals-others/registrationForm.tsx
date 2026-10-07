@@ -8,6 +8,8 @@ import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAppTranslation } from '@/translations/data/translationCentralization';
 import { uploadToR2 } from '../calculation-logic/imagesLogic';
+import { Picker } from '@react-native-picker/picker';
+import { DAIRAS_CONFIG, DEFAULT_ACTIVE_DAIRAS } from '../calculation-logic/calLivDaira';
 import { Colors } from '@/constants/Colors';
 import { useAgePhoneValidation } from '../calculation-logic/verifAgeNum';
 
@@ -31,6 +33,8 @@ const RegistrationForm = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [address, setAddress] = useState('');
+  const [selectedDairaId, setSelectedDairaId] = useState<string>('');
+  const [village, setVillage] = useState('');
   const [suggestedAddressFromMap, setSuggestedAddressFromMap] = useState<string | null>(null);
   const [domicileType, setDomicileType] = useState<string | null>(null);
   const [customDomicileType, setCustomDomicileType] = useState('');
@@ -294,19 +298,45 @@ const RegistrationForm = () => {
         <Text style={styles.sidetitle}>{t('livraisonInfo')}</Text>
         <Text style={styles.label}>{t('commandList.address')}</Text>
 
+        <Text style={styles.label}>Daïra :</Text>
+        <View style={styles.input}>
+          <Picker
+            selectedValue={selectedDairaId}
+            onValueChange={(dairaId: string) => {
+              setSelectedDairaId(dairaId);
+              const found = DAIRAS_CONFIG.find(d => d.id === dairaId);
+              if (found && found.communes.length > 0) {
+                setAddress(found.communes[0].name);
+              }
+            }}
+            enabled={!isLoading}
+          >
+            <Picker.Item label={`-- ${t('communePlaceholder')} --`} value="" />
+            {DAIRAS_CONFIG.filter(d => DEFAULT_ACTIVE_DAIRAS.includes(d.id)).map((daira) => (
+              <Picker.Item key={daira.id} label={daira.name} value={daira.id} />
+            ))}
+          </Picker>
+        </View>
+
         <Text style={styles.label}>{t('communeLabel')}</Text>
-        <TextInput
-          style={styles.input}
-          value={address}
-          onChangeText={setAddress}
-          placeholder={t('communePlaceholder')}
-          editable={!isLoading}
-        />
+        <View style={styles.input}>
+          <Picker
+            selectedValue={address}
+            onValueChange={(communeName: string) => setAddress(communeName)}
+            enabled={!isLoading && !!selectedDairaId}
+          >
+            <Picker.Item label={`-- ${t('communeLabel')} --`} value="" />
+            {(DAIRAS_CONFIG.find(d => d.id === selectedDairaId)?.communes || []).map((com) => (
+              <Picker.Item key={com.id} label={com.name} value={com.name} />
+            ))}
+          </Picker>
+        </View>
+
         <Text style={styles.label}>{t('villageLabel')}</Text>
         <TextInput
           style={styles.input}
-          value={address}
-          onChangeText={setAddress}
+          value={village}
+          onChangeText={setVillage}
           placeholder={t('villagePlaceholder')}
           editable={!isLoading}
         />

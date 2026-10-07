@@ -22,6 +22,7 @@ export const config = {
     premiumCollectionId: 'premium_utilisateurs',
     invitationsCollectionId: 'invitations',
     sireneFunctionId: 'notifications',
+    configCollectionId: 'app_config',
 } as const;
 
 export const r2Config = {

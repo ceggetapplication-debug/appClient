@@ -1,4 +1,5 @@
 import { PremiumUtilisateur } from './premiums';
+import { isSameDaira } from './calLivDaira';
 
 export enum TypeLivraison {
     Normal = 'normal',
@@ -460,8 +461,10 @@ export function calculerLivraisonPourPanier(
     totalProducts: number
 ): ResultatCalcul {
     const d = stores && stores.length > 0 ? Math.round(calculateur.comparerDistances(stores, acheteur) * 100) / 100 : 0;
+    const acheteurCommune = acheteur.address || '';
+    const isDifferentDaira = stores.some(s => !isSameDaira(acheteurCommune, s.address || ''));
 
-    if (d > ConfigurationTarifs.DISTANCE_20KM) {
+    if (isDifferentDaira) {
         return {
             MC: 0,
             d,
