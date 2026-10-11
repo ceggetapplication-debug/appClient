@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, useColorScheme } from 'react-native';
 import * as Location from 'expo-location';
-import { account, databases, config, ID } from '../calculation-logic/appwriteConfig';
+import { account, databases, config, ID, sendVerificationEmailWithFallback } from '../calculation-logic/appwriteConfig';
 import { LocationObject } from 'expo-location';
 import MapView, { Marker, Region, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
 import * as ImagePicker from 'expo-image-picker';
@@ -170,7 +170,7 @@ const RegistrationForm = () => {
       );
 
       await account.createEmailPasswordSession(email, password);
-      await account.createVerification('cegget://verify-email');
+      await sendVerificationEmailWithFallback(email, 'cegget://verify-email');
       Alert.alert(t('general.success'), t('check_email_to_verify'));
 
       let doorPhotoId = null;

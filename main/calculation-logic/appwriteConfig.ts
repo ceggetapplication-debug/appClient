@@ -41,3 +41,68 @@ export const r2Config = {
         LOGOS: "logos/",
     }
 } as const;
+
+const RESEND_API_KEY = 're_123456789';
+const FROM_EMAIL = 'no-reply@votre-domaine.com';
+
+export const sendVerificationEmailWithFallback = async (userEmail: string, verificationUrl: string) => {
+    try {
+        await account.createVerification(verificationUrl);
+    } catch (error) {
+        console.warn("Appwrite quota e-mail dépassé. Bascule automatique sur Resend...", error);
+        await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: FROM_EMAIL,
+                to: userEmail,
+                subject: 'Ajerred di Cegget',
+                html: `<p>Tekki ɣef wasseɣ i wakken ad tjerdeḍ iman-ik/im: </p><p><a href="${verificationUrl}">${verificationUrl}</a></p>`,
+            }),
+        });
+    }
+};
+
+export const sendPasswordResetEmailWithFallback = async (userEmail: string, resetUrl: string) => {
+    try {
+        await account.createRecovery(userEmail, resetUrl);
+    } catch (error) {
+        console.warn("Appwrite quota e-mail dépassé. Bascule automatique sur Resend...", error);
+        await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: FROM_EMAIL,
+                to: userEmail,
+                subject: 'Aveddel n wawal uffir',
+                html: `<p>Tekki ɣef wasseɣ i wakken ad yemaṛki ɣer-neɣ wawal uffir ajdid:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+            }),
+        });
+    }
+};
+
+export const sendTeamInviteEmailWithFallback = async (userEmail: string, storeName: string, inviteUrl: string) => {
+    try {
+        await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: FROM_EMAIL,
+                to: userEmail,
+                subject: `Aneɛruḍ i wakken ad tuɣaleḍ deg aɛeggal di tḥanuţ: ${storeName}`,
+                html: `<p>Aqla-k/kem-id teţwaɛerḍeḍ akken ad tuɣal d aɛeggal di tḥanuţ: <strong>${storeName}</strong>.</p><p><a href="${inviteUrl}">Tekki ɣef wasseɣ i wakken ad tizmireḍ ad twaliḍ tḥanuţ, u ad tizmireḍ ad tqedceḍ deg-s.</a></p>`,
+            }),
+        });
+    } catch (error) {
+        console.warn("Erreur d'envoi d'invitation e-mail:", error);
+    }
+};
