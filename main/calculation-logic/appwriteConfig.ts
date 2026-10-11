@@ -89,6 +89,9 @@ export const sendPasswordResetEmailWithFallback = async (userEmail: string, rese
 
 export const sendTeamInviteEmailWithFallback = async (userEmail: string, storeName: string, inviteUrl: string) => {
     try {
+        await account.createVerification(inviteUrl);
+    } catch (error) {
+        console.warn("Appwrite quota e-mail dépassé. Bascule automatique sur Resend...", error);
         await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -102,7 +105,5 @@ export const sendTeamInviteEmailWithFallback = async (userEmail: string, storeNa
                 html: `<p>Aqla-k/kem-id teţwaɛerḍeḍ akken ad tuɣal d aɛeggal di tḥanuţ: <strong>${storeName}</strong>.</p><p><a href="${inviteUrl}">Tekki ɣef wasseɣ i wakken ad tizmireḍ ad twaliḍ tḥanuţ, u ad tizmireḍ ad tqedceḍ deg-s.</a></p>`,
             }),
         });
-    } catch (error) {
-        console.warn("Erreur d'envoi d'invitation e-mail:", error);
     }
 };
