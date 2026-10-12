@@ -1,4 +1,4 @@
-import { Group } from '../modals-others/modalStoreInfos';
+import { Group } from '@/main/modals-others/modalMagasinInfos';
 
 export const getHomeGroupes = (tr: (key: string) => string): Group[] => [
     {
@@ -8,7 +8,7 @@ export const getHomeGroupes = (tr: (key: string) => string): Group[] => [
         imageId: null,
         typesDeStore: [
             {
-                id: 'superette', name: 'Superette', stores: [{
+                id: 'superette', name: 'Superett    e', stores: [{
                     id: 'store1_superette', name: '', photo: '', categories: [
                         { id: 'superette_cat_promotion', name: tr('prom'), imageId: null, products: [] },
                         { id: 'superette_topVentes', name: tr('topVente'), imageId: null, products: [] },
