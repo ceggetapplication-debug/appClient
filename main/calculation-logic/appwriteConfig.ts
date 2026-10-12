@@ -81,7 +81,7 @@ export const sendPasswordResetEmailWithFallback = async (userEmail: string, rese
                 from: FROM_EMAIL,
                 to: userEmail,
                 subject: 'Aveddel n wawal uffir',
-                html: `<p>Tekki ɣef wasseɣ i wakken ad yemaṛki ɣer-neɣ wawal uffir ajdid:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+                html: `<p>Tekki ɣef wasseɣ i wakken ad tveddel-ḍ awal uffir:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
             }),
         });
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, GestureResponderEvent, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Colors } from '@/constants/Colors';
-import { account, databases, ID, config } from '../calculation-logic/appwriteConfig';
+import { account, databases, ID, config, functions } from '../calculation-logic/appwriteConfig';
 import { useAppTranslation } from '@/translations/data/translationCentralization';
 
 interface PremiumOffersModalProps {
@@ -43,35 +43,26 @@ const PremiumUtiliOffersModal = ({ isVisible, onClose, onUpgradePress }: Premium
     }
   }, [isVisible]);
 
-  const APPWRITE_FUNCTION_URL = 'YOUR_APPWRITE_FUNCTION_URL';
-  const APPWRITE_FUNCTION_API_KEY = 'YOUR_APPWRITE_FUNCTION_API_KEY';
-
   const sendAdminNotification = async (offer: SelectedOfferDetails) => {
     try {
       const user = await account.get();
-      const userId = user.$id;
-      const userEmail = user.email;
-      const response = await fetch(APPWRITE_FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Appwrite-Function-Key': APPWRITE_FUNCTION_API_KEY,
-        },
-        body: JSON.stringify({
-          userId: userId,
-          userEmail: userEmail,
+
+      const execution = await functions.createExecution(
+        config.sireneFunctionId,
+        JSON.stringify({
+          userId: user.$id,
+          userEmail: user.email,
           offerDetails: offer,
           requestTime: new Date().toISOString(),
-        }),
-      });
+        })
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send admin notification via Appwrite Function');
+      if (execution.status === 'completed') {
+        const result = JSON.parse(execution.responseBody);
+        return { success: result.success, message: result.message };
+      } else {
+        throw new Error(`Function execution failed: ${execution.status}`);
       }
-
-      const result = await response.json();
-      return { success: result.success, message: result.message };
 
     } catch (error: any) {
       console.error('Appwrite Error in sendAdminNotification:', error);
@@ -104,33 +95,6 @@ const PremiumUtiliOffersModal = ({ isVisible, onClose, onUpgradePress }: Premium
     setSelectedOffer(offerDetails);
     setCurrentView('confirmation');
   };
-
-  {/*const handleMonthlyOptionPress = (months: number, price: number) => {
-    let confTitle = '';
-    let confBody = '';
-
-    if (months === 1) {
-      confTitle = `1 ${t('month')}`;
-      confBody = t('infosmoisPremUtili', { price: price });
-    } else if (months === 6) {
-      confTitle = `6 ${t('months')}`;
-      confBody = t('infosmoisPremUtili', { price: price, months: 6 });
-    } else if (months === 12) {
-      confTitle = `12 ${t('months')}`;
-      confBody = t('infosmoisPremUtili', { price: price, months: 12 });
-    }
-
-    const offerDetails: SelectedOfferDetails = {
-      type: 'subscription',
-      label: `${months}${t('month')}${months > 1 ? 's' : ''}`,
-      months: months,
-      price: price,
-      confirmationTitle: confTitle, 
-      confirmationBody: confBody    
-    };
-    setSelectedOffer(offerDetails);
-    setCurrentView('confirmation');
-  };*/}
 
   const handleInfoIconPress = (event: GestureResponderEvent, content: string) => {
     event.stopPropagation();
@@ -235,80 +199,6 @@ const PremiumUtiliOffersModal = ({ isVisible, onClose, onUpgradePress }: Premium
                   </View>
                 </TouchableOpacity>
               </View>
-
-              {/*<Text style={styles.groupCtaText}>
-              {t('premiumMoisLabelUtili')}
-            </Text>
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={styles.dealButton}
-                onPress={() => handleMonthlyOptionPress(1, 300)}
-              >
-                <TouchableOpacity
-                style={styles.infoIconContainerSmall} 
-                onPress={(event) => handleInfoIconPress(event,
-                  t('infosmoisPremUtili')
-                )}>
-                <Icon name="information-outline" size={16} color="#fff" />
-              </TouchableOpacity>
-                <View style={styles.buttonContentSmall}>
-                  <View style={styles.multiIconContainer}>
-                    <Image
-                    source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRW5xjdMDNCOC1PR6_eNxqnb8EOVuVgJ7erxg&s' }}
-                    style={styles.singleBonusImage}
-                  />
-                  </View>
-                  <Text style={styles.largeButtonLabel}>1{t('month')}</Text>
-                  <Text style={styles.buttonPrice}>300</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.dealButton}
-                onPress={() => handleMonthlyOptionPress(6, 1300)}
-              >
-                <TouchableOpacity
-                style={styles.infoIconContainerSmall}
-                onPress={(event) => handleInfoIconPress(event,
-                  t('infosmoisPremUtili')
-                )}>
-                <Icon name="information-outline" size={16} color="#fff" />
-              </TouchableOpacity>
-                <View style={styles.buttonContentSmall}>
-                  <View style={styles.multiIconContainer}>
-                    <Image
-                    source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRW5xjdMDNCOC1PR6_eNxqnb8EOVuVgJ7erxg&s' }}
-                    style={styles.singleBonusImage}
-                  />
-                  </View>
-                  <Text style={styles.largeButtonLabel}>6{t('months')}</Text>
-                  <Text style={styles.buttonPrice}>1300</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.dealButton}
-                onPress={() => handleMonthlyOptionPress(12, 3000)}
-              >
-                <TouchableOpacity
-                style={styles.infoIconContainerSmall} 
-                onPress={(event) => handleInfoIconPress(event,
-                  t('infosmoisPremUtili')
-                )}>
-                <Icon name="information-outline" size={16} color="#fff" />
-                </TouchableOpacity>
-                <View style={styles.buttonContentSmall}>
-                  <View style={styles.multiIconContainer}>
-                    <Image
-                    source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRW5xjdMDNCOC1PR6_eNxqnb8EOVuVgJ7erxg&s' }}
-                    style={styles.singleBonusImage}
-                  />
-                  </View>
-                  <Text style={styles.largeButtonLabel}>12 {t('months')}</Text>
-                  <Text style={styles.buttonPrice}>3000</Text>
-                </View>
-              </TouchableOpacity>
-              </View>*/}
             </ScrollView>
           </View>
         )}
