@@ -45,12 +45,12 @@ const RegistrationForm = () => {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [isVehicleInaccessible, setIsVehicleInaccessible] = useState(false);
   const mapRef = useRef<MapView>(null);
   const [showMapModal, setShowMapModal] = useState(false);
   const [currentMapRegion, setCurrentMapRegion] = useState<Region | null>(null);
   const [selectedPinLocation, setSelectedPinLocation] = useState<LocationCoordinates | null>(null);
   const [localisation_gps, setLocalisation_gps] = useState<LocationCoordinates | null>(null);
-
   const [birthDate, setBirthDate] = useState('');
   const [birthDateError, setBirthDateError] = useState('');
   const [phone, setPhone] = useState('');
@@ -471,6 +471,23 @@ const RegistrationForm = () => {
           editable={!isLoading}
         />
 
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => setIsVehicleInaccessible(!isVehicleInaccessible)}
+          activeOpacity={0.8}
+          disabled={isLoading}
+        >
+          <Ionicons
+            name={isVehicleInaccessible ? "checkbox" : "square-outline"}
+            size={24}
+            color={isVehicleInaccessible ? colors.green : colors.tabIconDefault}
+            style={styles.iconSpacing}
+          />
+          <Text style={styles.checkboxLabel}>
+            {t('noVehicleAccess')}
+          </Text>
+        </TouchableOpacity>
+
         <Text style={styles.label}>{t('frontDoorPic')}</Text>
         <TouchableOpacity onPress={pickImage} style={styles.imageButton} disabled={isLoading}>
           <Text style={styles.imageButtonText}>
@@ -762,7 +779,18 @@ const getStyles = (theme: 'light' | 'dark') => {
     homeButtonTextSelected: {
       color: colors.blond,
     },
-
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 15,
+      paddingVertical: 5,
+    },
+    checkboxLabel: {
+      flex: 1,
+      color: colors.textNormal,
+      fontSize: 13,
+      fontWeight: '500',
+    },
     label: {
       fontWeight: '600',
       marginTop: 15,
