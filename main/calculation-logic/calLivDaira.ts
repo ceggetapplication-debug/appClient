@@ -100,16 +100,6 @@ export const DAIRAS_CONFIG: Daira[] = [
         ]
     },
     {
-        id: 'daira_beni_douala',
-        name: 'At Dwala',
-        communes: [
-            { id: 'com_beni_douala', name: 'At Dwala' },
-            { id: 'com_ait_mahmoud', name: 'At Maḥmud' },
-            { id: 'com_beni_aissi', name: 'Beni Aïssi' },
-            { id: 'com_beni_zmenzer', name: 'At Zmenzer' }
-        ]
-    },
-    {
         id: 'daira_autre',
         name: 'Tiyaḍ',
         communes: [
@@ -197,9 +187,14 @@ export const DAIRAS_CONFIG: Daira[] = [
 ];
 
 export function isSameDaira(communeAcheteur: string, communeMagasin: string): boolean {
+    if (!communeAcheteur || !communeMagasin) return false;
+    const normA = communeAcheteur.trim().toLowerCase();
+    const normM = communeMagasin.trim().toLowerCase();
+
     for (const daira of DAIRAS_CONFIG) {
-        const comNames = daira.communes.map(c => c.name.toLowerCase());
-        if (comNames.includes(communeAcheteur.toLowerCase()) && comNames.includes(communeMagasin.toLowerCase())) {
+        const hasA = daira.communes.some(c => c.id.toLowerCase() === normA || c.name.toLowerCase() === normA);
+        const hasM = daira.communes.some(c => c.id.toLowerCase() === normM || c.name.toLowerCase() === normM);
+        if (hasA && hasM) {
             return true;
         }
     }

@@ -114,7 +114,7 @@ const ProductSearchBar: React.FC = () => {
         let results: Array<{ productNameKey: ProductNameKey; translatedName: string; }>;
 
         if (productSearchText.length > 0) {
-          results = await loadedLogiqueNoms!.getProductSuggestions(productSearchText, langToUse, 50);
+          results = await loadedLogiqueNoms!.getProductSuggestions(productSearchText, langToUse, 10);
         } else {
           results = [];
         }

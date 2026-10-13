@@ -1,5 +1,5 @@
 import { Models } from 'react-native-appwrite';
-import { LocalisationUser, Store, Driver, Coordonnees, TypeLivraison, ResultatCalcul, ResultatFinalDeLivraison } from '../calculation-logic/calculLivraison';
+import { LocalisationUser, Store, Driver, TypeLivraison, ResultatCalcul } from '../calculation-logic/calculLivraison';
 
 
 export interface Product extends Models.Document {

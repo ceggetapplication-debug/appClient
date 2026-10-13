@@ -60,7 +60,7 @@ export const getHomeGroupes = (tr: (key: string) => string): Group[] => [
         imageId: null,
         typesDeStore: [
             {
-                id: 'superette', name: 'Superett    e', stores: [{
+                id: 'superette', name: 'Superette', stores: [{
                     id: 'store1_superette', name: '', photo: '', categories: [
                         { id: 'superette_cat_promotion', name: tr('prom'), imageId: null, products: [] },
                         { id: 'superette_topVentes', name: tr('topVente'), imageId: null, products: [] },

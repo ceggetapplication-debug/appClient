@@ -10,8 +10,9 @@ import { useAppTranslation } from '@/translations/data/translationCentralization
 import { uploadToR2 } from '../calculation-logic/imagesLogic';
 import { Picker } from '@react-native-picker/picker';
 import { DAIRAS_CONFIG, DEFAULT_ACTIVE_DAIRAS } from '../calculation-logic/calLivDaira';
+import { validateEmail, validatePhone, validateBirthDate, validatePassword, formatBirthDateInput } from '../calculation-logic/centralAuthVerf';
+import { blockArabicInput } from '../../translations/data/blockerArab';
 import { Colors } from '@/constants/Colors';
-import { useAgePhoneValidation } from '../calculation-logic/verifAgeNum';
 
 interface LocationCoordinates {
   accuracy: number | null;
@@ -50,14 +51,39 @@ const RegistrationForm = () => {
   const [selectedPinLocation, setSelectedPinLocation] = useState<LocationCoordinates | null>(null);
   const [localisation_gps, setLocalisation_gps] = useState<LocationCoordinates | null>(null);
 
-  const { birthDate,
-    birthDateError,
-    handleBirthDateChange,
-    isBirthDateValid,
-    phone,
-    phoneError,
-    handlePhoneChange,
-    isPhoneValid } = useAgePhoneValidation();
+  const [birthDate, setBirthDate] = useState('');
+  const [birthDateError, setBirthDateError] = useState('');
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  const handleBirthDateChange = (text: string) => {
+    const formatted = formatBirthDateInput(text);
+    setBirthDate(formatted);
+    if (formatted.length === 10) {
+      const res = validateBirthDate(formatted);
+      if (!res.isValid && res.errorKey) {
+        setBirthDateError(t(res.errorKey));
+      } else {
+        setBirthDateError('');
+      }
+    } else {
+      setBirthDateError('');
+    }
+  };
+
+  const handlePhoneChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    setPhone(cleaned);
+    const res = validatePhone(cleaned);
+    if (cleaned.length > 0 && !res.isValid && res.errorKey) {
+      setPhoneError(t(res.errorKey));
+    } else {
+      setPhoneError('');
+    }
+  };
+
+  const isBirthDateValid = () => validateBirthDate(birthDate).isValid;
+  const isPhoneValid = () => validatePhone(phone).isValid;
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -116,8 +142,8 @@ const RegistrationForm = () => {
       isBirthDateValid() &&
       isPhoneValid() &&
       !!sexe &&
-      !!email &&
-      !!password && password.length >= 8 &&
+      validateEmail(email) &&
+      validatePassword(password).isValid &&
       localisation_gps !== null &&
       !!address &&
       !!imageUri &&
@@ -143,9 +169,8 @@ const RegistrationForm = () => {
         missingFields.push(t('dobLabel') + (birthDateError ? ` (${birthDateError})` : ''));
       }
       if (!phone || phone.replace(/\D/g, '').length !== 10 || phoneError) missingFields.push(t('phoneLabel') + (phoneError ? ` (${phoneError})` : ''));
-      if (!email) missingFields.push(t('emailLabel'));
-      if (!password) missingFields.push(t('passwordLabel'));
-      if (password.length < 8) missingFields.push(t('passwordLabel') + ` (${t('passwordNote')})`);
+      if (!email || !validateEmail(email)) missingFields.push(t('emailLabel'));
+      if (!password || !validatePassword(password).isValid) missingFields.push(t('passwordLabel') + ` (${t('passwordNote')})`);
       if (!address) missingFields.push(t('commandList.address'));
       if (domicileType === 'Appartement') {
         if (!buildingName) missingFields.push(t('buildingNameLabel'));
@@ -260,10 +285,10 @@ const RegistrationForm = () => {
         <Text style={styles.sidetitle}>{t('aboutYou')}</Text>
 
         <Text style={styles.label}>{t('nameLabel')}</Text>
-        <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder={t('placeholderFullName')} editable={!isLoading} />
+        <TextInput style={styles.input} value={fullName} onChangeText={(text: string) => setFullName(blockArabicInput(text))} placeholder={t('placeholderFullName')} editable={!isLoading} />
 
         <Text style={styles.label}>{t('labelUsername')}</Text>
-        <TextInput style={styles.input} value={username} onChangeText={setUserName} placeholder={t('placeholderUsername')} editable={!isLoading} />
+        <TextInput style={styles.input} value={username} onChangeText={(text: string) => setUserName(blockArabicInput(text))} placeholder={t('placeholderUsername')} editable={!isLoading} />
 
         <Text style={styles.label}>{t('dobLabel')}</Text>
         <TextInput
@@ -336,7 +361,7 @@ const RegistrationForm = () => {
         <TextInput
           style={styles.input}
           value={village}
-          onChangeText={setVillage}
+          onChangeText={(text: string) => setVillage(blockArabicInput(text))}
           placeholder={t('villagePlaceholder')}
           editable={!isLoading}
         />
@@ -411,7 +436,7 @@ const RegistrationForm = () => {
             <TextInput
               style={styles.input}
               value={buildingName}
-              onChangeText={setBuildingName}
+              onChangeText={(text: string) => setBuildingName(blockArabicInput(text))}
               placeholder={t('placeholderBuildingName') || 'Nom du bâtiment'}
               editable={!isLoading}
             />
@@ -419,7 +444,7 @@ const RegistrationForm = () => {
             <TextInput
               style={styles.input}
               value={floor}
-              onChangeText={setFloor}
+              onChangeText={(text: string) => setFloor(blockArabicInput(text))}
               placeholder={t('placeholderFloor')}
               editable={!isLoading}
             />
@@ -430,7 +455,7 @@ const RegistrationForm = () => {
             <TextInput
               style={styles.input}
               value={customDomicileType}
-              onChangeText={setCustomDomicileType}
+              onChangeText={(text: string) => setCustomDomicileType(blockArabicInput(text))}
               placeholder={t('enterOtherTypePlaceholder') || 'Entrez le type'}
               editable={!isLoading}
             />
