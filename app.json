@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/logi.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.cegget.ceggettah"
+      "package": "com.cegget.client"
     },
     "web": {
       "bundler": "metro",

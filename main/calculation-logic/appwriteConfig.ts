@@ -3,7 +3,7 @@ import { Client, Databases, Account, Query, ID, Models, Functions } from 'react-
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1')
     .setProject('cegget_project')
-    .setPlatform('com.koceiladrk.cegget');
+    .setPlatform('com.cegget.client');
 
 export { client, Query, ID, Models };
 export const databases = new Databases(client);
@@ -60,7 +60,7 @@ export const sendVerificationEmailWithFallback = async (userEmail: string, verif
                 from: FROM_EMAIL,
                 to: userEmail,
                 subject: 'Ajerred di Cegget',
-                html: `<p>Tekki ɣef wasseɣ i wakken ad tjerdeḍ iman-ik/im: </p><p><a href="${verificationUrl}">${verificationUrl}</a></p>`,
+                html: `<p>Tekki ɣef wassaɣ i wakken ad tjerdeḍ iman-ik/im: </p><p><a href="${verificationUrl}">${verificationUrl}</a></p>`,
             }),
         });
     }
@@ -81,7 +81,7 @@ export const sendPasswordResetEmailWithFallback = async (userEmail: string, rese
                 from: FROM_EMAIL,
                 to: userEmail,
                 subject: 'Aveddel n wawal uffir',
-                html: `<p>Tekki ɣef wasseɣ i wakken ad tveddel-ḍ awal uffir:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+                html: `<p>Tekki ɣef wassaɣ i wakken ad tveddel-ḍ awal uffir:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
             }),
         });
     }
@@ -102,7 +102,7 @@ export const sendTeamInviteEmailWithFallback = async (userEmail: string, storeNa
                 from: FROM_EMAIL,
                 to: userEmail,
                 subject: `Aneɛruḍ i wakken ad tuɣaleḍ deg aɛeggal di tḥanuţ: ${storeName}`,
-                html: `<p>Aqla-k/kem-id teţwaɛerḍeḍ akken ad tuɣal d aɛeggal di tḥanuţ: <strong>${storeName}</strong>.</p><p><a href="${inviteUrl}">Tekki ɣef wasseɣ i wakken ad tizmireḍ ad twaliḍ tḥanuţ, u ad tizmireḍ ad tqedceḍ deg-s.</a></p>`,
+                html: `<p>Aqla-k/kem-id teţwaɛerḍeḍ akken ad tuɣal d aɛeggal di tḥanuţ: <strong>${storeName}</strong>.</p><p><a href="${inviteUrl}">Tekki ɣef wassaɣ i wakken ad tizmireḍ ad twaliḍ tḥanuţ, u ad tizmireḍ ad tqedceḍ deg-s.</a></p>`,
             }),
         });
     }
