@@ -18,6 +18,7 @@ interface SavedPosition {
   domicileNumber: string;
   frontDoorPicId: string;
   otherInfos: string;
+  isVehicleInaccessible?: boolean;
 }
 
 interface LocationCoord {
@@ -61,6 +62,7 @@ function modalMapBuyer() {
   const [savedPositions, setSavedPositions] = useState<SavedPosition[]>([]);
   const [newPositionName, setNewPositionName] = useState<string>('');
   const [userId, setUserId] = useState<string | null>(null);
+  const [isVehicleInaccessible, setIsVehicleInaccessible] = useState<boolean>(false);
 
   const prevIsPickingLocationRef = useRef(isPickingLocation);
   useEffect(() => {
@@ -85,6 +87,7 @@ function modalMapBuyer() {
         domicileNumber: doc.domicileNumber,
         frontDoorPicId: doc.$id,
         otherInfos: doc.otherInfos,
+        isVehicleInaccessible: doc.isVehicleInaccessible ?? false,
       }));
       setSavedPositions(positions);
     } catch (e) { console.error("Erreur chargement adresses:", e); }
@@ -103,6 +106,7 @@ function modalMapBuyer() {
         domicileType: position.domicileType,
         domicileNumber: position.domicileNumber,
         otherInfos: position.otherInfos,
+        isVehicleInaccessible: position.isVehicleInaccessible ?? false,
       });
       if (tempImage && tempImage.startsWith('file')) {
         await setPortePhoto(doc.$id, tempImage);
@@ -416,6 +420,46 @@ function modalMapBuyer() {
                 )}
               </View>
 
+              <View style={styles.infoSection}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoSectionLabel}>{t('noVehicleAccess')}:</Text>
+                  <TouchableOpacity onPress={() => setIsEditingField('isVehicleInaccessible')}>
+                    <Ionicons name="pencil" size={20} color={colors.green} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.infoSectionText, { color: !isVehicleInaccessible ? colors.green : colors.globeu, fontWeight: 'bold', fontSize: 18 }]}>
+                  {!isVehicleInaccessible ? t('general.yes').toUpperCase() : t('general.no').toUpperCase()}
+                </Text>
+
+                {isEditingField === 'isVehicleInaccessible' && (
+                  <View style={styles.confirmBarButtons}>
+                    <TouchableOpacity
+                      style={!isVehicleInaccessible ? styles.actionButton : styles.cancelButton}
+                      onPress={() => {
+                        setIsVehicleInaccessible(false);
+                        setIsEditingField(null);
+                      }}
+                    >
+                      <Text style={!isVehicleInaccessible ? styles.actionButtonText : styles.cancelButtonText}>
+                        {t('general.yes').toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={isVehicleInaccessible ? styles.actionButton : styles.cancelButton}
+                      onPress={() => {
+                        setIsVehicleInaccessible(true);
+                        setIsEditingField(null);
+                      }}
+                    >
+                      <Text style={isVehicleInaccessible ? styles.actionButtonText : styles.cancelButtonText}>
+                        {t('general.no').toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
               <Text style={styles.infoSectionTitle}>{t('selectAnotherAdress')}</Text>
               {savedPositions.length === 0 && (
                 <Text style={styles.infoSectionText}>{t('addNewAdresses')}</Text>
@@ -451,6 +495,7 @@ function modalMapBuyer() {
                     frontDoorPic: buildPortePhoto(pos.id).url,
                     otherInfos: pos.otherInfos,
                   });
+                  setIsVehicleInaccessible(pos.isVehicleInaccessible ?? false);
                   setNewPositionName(pos.name);
                   setSavedPositions((prev: SavedPosition[]) => prev.filter((p: SavedPosition) => p.id !== pos.id));
 
@@ -490,6 +535,27 @@ function modalMapBuyer() {
                     onChangeText={setNewPositionName}
                     placeholder={t('arudIsemNrebbisnLadris')}
                   />
+
+                  <Text style={styles.infoSectionLabel}>{t('noAutoNoPass')}:</Text>
+                  <View style={styles.confirmBarButtons}>
+                    <TouchableOpacity
+                      style={!isVehicleInaccessible ? styles.actionButton : styles.cancelButton}
+                      onPress={() => setIsVehicleInaccessible(false)}
+                    >
+                      <Text style={!isVehicleInaccessible ? styles.actionButtonText : styles.cancelButtonText}>
+                        {t('general.yes').toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={isVehicleInaccessible ? styles.actionButton : styles.cancelButton}
+                      onPress={() => setIsVehicleInaccessible(true)}
+                    >
+                      <Text style={isVehicleInaccessible ? styles.actionButtonText : styles.cancelButtonText}>
+                        {t('general.no').toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={styles.confirmBarButtons}>
                     <TouchableOpacity style={styles.cancelButton} onPress={() => setIsPickingLocation(false)}>
                       <Text style={styles.cancelButtonText}>{t('general.cancel')}</Text>
@@ -513,10 +579,11 @@ function modalMapBuyer() {
                               id: newId,
                               name: newPositionName || `Position ${savedPositions.length + 1}`,
                               coordinates: tempSelectedLocation,
-                              domicileType: '',
-                              domicileNumber: '',
-                              frontDoorPicId: newId, // On garde l'ID document par cohérence
-                              otherInfos: '',
+                              domicileType: currentValues.domicileType || '',
+                              domicileNumber: currentValues.domicileNumber || '',
+                              frontDoorPicId: newId,
+                              otherInfos: currentValues.otherInfos || '',
+                              isVehicleInaccessible: isVehicleInaccessible,
                             };
 
                             await savePosition(newPos);
