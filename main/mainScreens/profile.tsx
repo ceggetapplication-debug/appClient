@@ -12,6 +12,7 @@ import { buildProfilePhoto, uploadToR2, sizes } from '../calculation-logic/image
 import ForgotPasswordModal from '../modals-others/modalChangeResetPassword';
 import { useAppTranslation } from '@/translations/data/translationCentralization';
 import PremiumUtiliOffersModal from '../modals-others/modalPremiums';
+import { TermsModal } from '../modals-others/termsConditions';
 import { Colors } from '@/constants/Colors';
 
 interface UserProfile {
@@ -68,6 +69,7 @@ function ProfileScreen() {
     const [isPremium, setIsPremium] = useState(false);
     const [isPremiumOffersVisible, setIsPremiumOffersVisible] = useState(false);
     const [inviteFriendsModalVisible, setInviteFriendsModalVisible] = useState(false);
+    const [termsModalVisible, setTermsModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<string>('');
     const [isResetPasswordVisible, setIsResetPasswordVisible] = useState(false);
@@ -560,6 +562,15 @@ function ProfileScreen() {
                                 {renderMenuItem("call-outline", "contactUs", t('profileScreen.contactUs'))}
                                 {renderMenuItem("log-out-outline", "logout", t('profileScreen.logout'))}
                                 {renderMenuItem("trash-outline", "deleteAccount", t('profileScreen.deleteAccount'))}
+
+                                <TouchableOpacity
+                                    style={styles.aboutUsButton}
+                                    onPress={() => setTermsModalVisible(true)}
+                                >
+                                    <Text style={styles.aboutUsButtonText}>
+                                        {t('aboutUs')}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                         </>
                     )}
@@ -930,6 +941,11 @@ function ProfileScreen() {
                         visible={isResetPasswordVisible}
                         onClose={() => setIsResetPasswordVisible(false)}
                     />
+
+                    <TermsModal
+                        visible={termsModalVisible}
+                        onClose={() => setTermsModalVisible(false)}
+                    />
                 </>
             )}
         </View>
@@ -1248,6 +1264,14 @@ const getStyles = (theme: 'light' | 'dark') => {
         contactOptionText: {
             fontSize: 14,
             color: colors.textNormal,
+        },
+        aboutUsButtonText: {
+            marginTop: 25,
+            marginBottom: 15,
+            alignSelf: 'flex-start',
+            fontSize: 14,
+            color: colors.textNormal,
+            fontWeight: 'bold',
         },
     });
 };

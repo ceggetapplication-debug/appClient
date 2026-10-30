@@ -12,6 +12,7 @@ import { Picker } from '@react-native-picker/picker';
 import { DAIRAS_CONFIG, DEFAULT_ACTIVE_DAIRAS } from '../calculation-logic/calLivDaira';
 import { validateEmail, validatePhone, validateBirthDate, validatePassword, formatBirthDateInput } from '../calculation-logic/centralAuthVerf';
 import { blockArabicInput } from '../../translations/data/blockerArab';
+import { TermsModal } from './termsConditions';
 import { Colors } from '@/constants/Colors';
 
 interface LocationCoordinates {
@@ -55,6 +56,7 @@ const RegistrationForm = () => {
   const [birthDateError, setBirthDateError] = useState('');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const handleBirthDateChange = (text: string) => {
     const formatted = formatBirthDateInput(text);
@@ -177,8 +179,8 @@ const RegistrationForm = () => {
         if (!floor) missingFields.push(t('floorLabel'));
       }
       if (!imageUri) missingFields.push(t('frontDoorPic'));
-      let errorMessage = t('profileScreen.passwordFieldsRequired') + '\n\n' + missingFields.join('\n');
       if (localisation_gps === null) missingFields.push(t('tab.gps') + ` (${t('selectOnMap')})`);
+      let errorMessage = t('profileScreen.passwordFieldsRequired') + '\n\n' + missingFields.join('\n');
       Alert.alert(t('formIncompleteTitle'), errorMessage);
       return;
     }
@@ -199,7 +201,7 @@ const RegistrationForm = () => {
       Alert.alert(t('general.success'), t('check_email_to_verify'));
 
       let doorPhotoId = null;
-      if (imageUri && imageUri.startsWith('file')) {
+      if (imageUri && (imageUri.startsWith('file') || imageUri.startsWith('content'))) {
         await uploadToR2(`portes/${newAccount.$id}.jpg`, {
           uri: imageUri,
           name: `${newAccount.$id}.jpg`,
@@ -248,7 +250,7 @@ const RegistrationForm = () => {
     setIsLoading(true);
     try {
       if (selectedPinLocation === null) {
-        Alert.alert(t('general.attention'), t('noLocationSelected') || 'Aucun point sélectionné sur la carte.');
+        Alert.alert(t('general.attention'), t('noLocationSelected'));
         setIsLoading(false);
         setShowMapModal(false);
         return;
@@ -273,6 +275,9 @@ const RegistrationForm = () => {
       console.error("Geocoding Error confirming location:", error);
       const gpsFallback = `${selectedPinLocation.latitude.toFixed(5)}, ${selectedPinLocation.longitude.toFixed(5)}`;
       setSuggestedAddressFromMap(gpsFallback);
+      setShowMapModal(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -615,8 +620,19 @@ const RegistrationForm = () => {
           </TouchableOpacity>
         </View>
         {authError ? <Text style={styles.error}>{authError}</Text> : null}
-
         <Text style={styles.note}>{t('profileScreen.weakPasswordHint')}</Text>
+        <Text style={styles.termsSentence}>
+          {t('termsCondis').split('{{')[0]}
+          <Text style={styles.termsLink} onPress={() => setShowTermsModal(true)}>
+            {t('termsCondis').split('{{')[1]?.split('}}')[0]}
+          </Text>
+          {t('termsCondis').split('}}')[1]}
+        </Text>
+
+        <TermsModal
+          visible={showTermsModal}
+          onClose={() => setShowTermsModal(false)}
+        />
 
         <TouchableOpacity
           onPress={handleSubmit}
@@ -854,7 +870,7 @@ const getStyles = (theme: 'light' | 'dark') => {
       marginTop: 20,
       fontSize: 12,
       fontStyle: 'italic',
-      fontWeight: 600,
+      fontWeight: 'bold',
       color: colors.greyDes,
     },
     submitButton: {
@@ -865,6 +881,19 @@ const getStyles = (theme: 'light' | 'dark') => {
       width: 'auto',
       alignSelf: 'center',
       alignItems: 'center',
+    },
+    termsSentence: {
+      fontSize: 14,
+      color: colors.textNormal,
+      lineHeight: 20,
+      textAlign: 'center',
+      marginVertical: 15,
+    },
+    termsLink: {
+      fontSize: 15,
+      color: colors.tint,
+      fontWeight: 'bold',
+      textDecorationLine: 'underline',
     },
     submitButtonDisabled: {
       opacity: 0.4,
