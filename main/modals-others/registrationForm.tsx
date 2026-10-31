@@ -12,7 +12,7 @@ import { Picker } from '@react-native-picker/picker';
 import { DAIRAS_CONFIG, DEFAULT_ACTIVE_DAIRAS } from '../calculation-logic/calLivDaira';
 import { validateEmail, validatePhone, validateBirthDate, validatePassword, formatBirthDateInput } from '../calculation-logic/centralAuthVerf';
 import { blockArabicInput } from '../../translations/data/blockerArab';
-import { TermsModal } from './termsConditions';
+import { TERMS_TEXT } from '@/constants/termsConditions';
 import { Colors } from '@/constants/Colors';
 
 interface LocationCoordinates {
@@ -629,7 +629,7 @@ const RegistrationForm = () => {
           {t('termsCondis').split('}}')[1]}
         </Text>
 
-        <TermsModal
+        <TERMS_TEXT
           visible={showTermsModal}
           onClose={() => setShowTermsModal(false)}
         />
